@@ -54,16 +54,17 @@
 <script>
     /* ============================================================
        TopChat — chatbot interactions (mock AI responses)
-       Supports: địa điểm, ẩm thực, ngân sách, thời tiết, kinh nghiệm
+       Modified: NO auto-scroll to bottom. Only scroll to user message on send.
     ============================================================ */
     const chatInput = document.getElementById('chatbot-input');
     const chatSend = document.getElementById('chatbot-send');
     const chatMessages = document.getElementById('chatbot-messages');
 
-    // ---- Message rendering helpers ----
-
-    function scrollBottom() {
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+    // ---- Helper: scroll to element ----
+    function scrollToElement(el) {
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     }
 
     // Add a simple text message
@@ -80,10 +81,10 @@
       </div>`;
         }
         chatMessages.appendChild(div);
-        scrollBottom();
+        // No auto-scroll
     }
 
-    // Add a rich card message (place / hotel grid)
+    // Add a rich card message
     function addCardMessage(cardData) {
         const div = document.createElement('div');
         div.className = 'message bot';
@@ -106,10 +107,9 @@
       </div>
     </div>`;
         chatMessages.appendChild(div);
-        scrollBottom();
     }
 
-    // Show a typing indicator while "AI is thinking"
+    // Show typing indicator
     function showTyping() {
         const div = document.createElement('div');
         div.className = 'message bot';
@@ -124,7 +124,6 @@
       </div>
     </div>`;
         chatMessages.appendChild(div);
-        scrollBottom();
     }
 
     function removeTyping() {
@@ -132,148 +131,70 @@
         if (t) t.remove();
     }
 
-    // ---- Response data ----
-
+    // ---- Response data (unchanged) ----
     const RESPONSES = {
-
-        // 1. Đà Lạt places
         dalat: {
             type: 'card',
             trigger: text => text.includes('đà lạt') || text.includes('da lat'),
             card: {
                 title: '🌸 Địa điểm nổi bật ở Đà Lạt',
                 items: [
-                    {
-                        name: '🌊 Hồ Xuân Hương',
-                        desc: 'Trái tim thành phố — dạo thuyền, cà phê ngắm cảnh sương mờ.',
-                        details: 'Rộng 5km², nằm ngay trung tâm. Buổi sáng sương mờ rất đẹp. Thuê thuyền đạp vịt, xe ngựa dạo quanh.',
-                        rating: '4.8'
-                    },
-                    {
-                        name: '💑 Thung lũng Tình Yêu',
-                        desc: 'Công viên lãng mạn — vườn hoa rực rỡ, cầu Vòng Tay.',
-                        details: 'Nhiều khu hoa đặc sắc, phù hợp cặp đôi & gia đình. Vé ~120.000 ₫/người.',
-                        rating: '4.5'
-                    },
-                    {
-                        name: '🏔️ Đỉnh LangBiang',
-                        desc: 'Chinh phục đỉnh núi 2.167m — view toàn cảnh Đà Lạt.',
-                        details: 'Đi bộ hoặc cáp treo. Nên đi sáng sớm để tránh mây. Mang áo ấm!',
-                        rating: '4.7'
-                    },
-                    {
-                        name: '🌺 Làng hoa Vạn Thành',
-                        desc: 'Làng hoa lớn nhất Đà Lạt — check-in cực xinh, vào cửa miễn phí.',
-                        details: 'Hàng trăm loại hoa quanh năm, đặc biệt đẹp dịp Tết & Festival Hoa.',
-                        rating: '4.4'
-                    },
+                    { name: '🌊 Hồ Xuân Hương', desc: 'Trái tim thành phố — dạo thuyền, cà phê ngắm cảnh sương mờ.', details: 'Rộng 5km², nằm ngay trung tâm. Buổi sáng sương mờ rất đẹp. Thuê thuyền đạp vịt, xe ngựa dạo quanh.', rating: '4.8' },
+                    { name: '💑 Thung lũng Tình Yêu', desc: 'Công viên lãng mạn — vườn hoa rực rỡ, cầu Vòng Tay.', details: 'Nhiều khu hoa đặc sắc, phù hợp cặp đôi & gia đình. Vé ~120.000 ₫/người.', rating: '4.5' },
+                    { name: '🏔️ Đỉnh LangBiang', desc: 'Chinh phục đỉnh núi 2.167m — view toàn cảnh Đà Lạt.', details: 'Đi bộ hoặc cáp treo. Nên đi sáng sớm để tránh mây. Mang áo ấm!', rating: '4.7' },
+                    { name: '🌺 Làng hoa Vạn Thành', desc: 'Làng hoa lớn nhất Đà Lạt — check-in cực xinh, vào cửa miễn phí.', details: 'Hàng trăm loại hoa quanh năm, đặc biệt đẹp dịp Tết & Festival Hoa.', rating: '4.4' },
                 ]
             },
             follow: '📌 TopGo gợi ý thêm: mùa tốt nhất đến Đà Lạt là <strong>tháng 11 – 1</strong> (Festival Hoa). Mang áo ấm vì đêm lạnh nhé!'
         },
-
-        // 2. Đà Nẵng places
         danang: {
             type: 'card',
             trigger: text => text.includes('đà nẵng') || text.includes('da nang'),
             card: {
                 title: '🏖️ Top địa điểm Đà Nẵng',
                 items: [
-                    {
-                        name: '🌉 Bà Nà Hills',
-                        desc: 'Cầu Vàng biểu tượng, làng Pháp, công viên Fantasy Park.',
-                        details: 'Cáp treo dài nhất thế giới. Vé ~900K/người (full day). Đặt online tiết kiệm ~100K.',
-                        rating: '4.9'
-                    },
-                    {
-                        name: '🏖️ Bãi biển Mỹ Khê',
-                        desc: 'Forbes bình chọn top 6 bãi biển đẹp nhất thế giới.',
-                        details: 'Cát trắng mịn, nước xanh trong. Tắm biển miễn phí. Nhiều quán hải sản ngon gần bãi.',
-                        rating: '4.8'
-                    },
-                    {
-                        name: '🐉 Cầu Rồng',
-                        desc: 'Biểu tượng Đà Nẵng — phun lửa & nước tối thứ 7, CN lúc 21h.',
-                        details: 'Cầu dài 666m hình rồng vươn ra biển. Đi bộ trên cầu buổi tối rất thú vị.',
-                        rating: '4.6'
-                    },
-                    {
-                        name: '🐒 Núi Sơn Trà',
-                        desc: 'Rừng nguyên sinh, voọc chà vá chân nâu đặc hữu, view đỉnh.',
-                        details: 'Lái xe lên đỉnh ~30 phút. Ngắm toàn cảnh thành phố tuyệt đẹp lúc bình minh.',
-                        rating: '4.5'
-                    },
+                    { name: '🌉 Bà Nà Hills', desc: 'Cầu Vàng biểu tượng, làng Pháp, công viên Fantasy Park.', details: 'Cáp treo dài nhất thế giới. Vé ~900K/người (full day). Đặt online tiết kiệm ~100K.', rating: '4.9' },
+                    { name: '🏖️ Bãi biển Mỹ Khê', desc: 'Forbes bình chọn top 6 bãi biển đẹp nhất thế giới.', details: 'Cát trắng mịn, nước xanh trong. Tắm biển miễn phí. Nhiều quán hải sản ngon gần bãi.', rating: '4.8' },
+                    { name: '🐉 Cầu Rồng', desc: 'Biểu tượng Đà Nẵng — phun lửa & nước tối thứ 7, CN lúc 21h.', details: 'Cầu dài 666m hình rồng vươn ra biển. Đi bộ trên cầu buổi tối rất thú vị.', rating: '4.6' },
+                    { name: '🐒 Núi Sơn Trà', desc: 'Rừng nguyên sinh, voọc chà vá chân nâu đặc hữu, view đỉnh.', details: 'Lái xe lên đỉnh ~30 phút. Ngắm toàn cảnh thành phố tuyệt đẹp lúc bình minh.', rating: '4.5' },
                 ]
             },
             follow: '✈️ Bay từ Hà Nội hoặc Sài Gòn ~1 tiếng. Mùa đẹp: <strong>tháng 3–8</strong> (ít mưa, nắng đẹp).'
         },
-
-        // 3. Food / đặc sản
         food: {
             type: 'food',
-            trigger: text =>
-                text.includes('ăn gì') || text.includes('đặc sản') || text.includes('món ăn') ||
-                text.includes('ngon') || text.includes('quán') || text.includes('hội an'),
+            trigger: text => text.includes('ăn gì') || text.includes('đặc sản') || text.includes('món ăn') || text.includes('ngon') || text.includes('quán') || text.includes('hội an'),
         },
-
-        // 4. Budget / chi phí
         budget: {
             type: 'budget',
-            trigger: text =>
-                text.includes('ngân sách') || text.includes('bao nhiêu tiền') ||
-                text.includes('chi phí') || text.includes('hết bao nhiêu') ||
-                text.includes('giá') || text.includes('tốn'),
+            trigger: text => text.includes('ngân sách') || text.includes('bao nhiêu tiền') || text.includes('chi phí') || text.includes('hết bao nhiêu') || text.includes('giá') || text.includes('tốn'),
         },
-
-        // 5. Weather / thời tiết
         weather: {
             type: 'weather',
-            trigger: text =>
-                text.includes('thời tiết') || text.includes('nhiệt độ') || text.includes('mặc gì') ||
-                text.includes('mưa') || text.includes('nắng') || text.includes('tháng'),
+            trigger: text => text.includes('thời tiết') || text.includes('nhiệt độ') || text.includes('mặc gì') || text.includes('mưa') || text.includes('nắng') || text.includes('tháng'),
         },
-
-        // 6. Hạ Long experience
         halong: {
             type: 'card',
             trigger: text => text.includes('hạ long') || text.includes('ha long'),
             card: {
                 title: '⛵ Kinh nghiệm du lịch Hạ Long',
                 items: [
-                    {
-                        name: '🚢 Tour ngủ đêm trên vịnh',
-                        desc: 'Trải nghiệm không thể bỏ qua — ngủ trên thuyền giữa vịnh.',
-                        details: 'Tour 2N1Đ ~1.5–3M/người. Book sớm mùa hè vì rất đông. Sunrise trên vịnh cực đẹp.',
-                        rating: '4.9'
-                    },
-                    {
-                        name: '🏊 Hang Sửng Sốt & Đảo Ti Tốp',
-                        desc: 'Hang động kỳ vĩ nhất vịnh + leo núi ngắm toàn cảnh.',
-                        details: 'Ti Tốp có bãi tắm đẹp, leo 400 bậc lên đỉnh. Nên đi sáng sớm.',
-                        rating: '4.7'
-                    },
-                    {
-                        name: '🎣 Làng chài Cửa Vạn',
-                        desc: 'Làng chài nổi độc đáo giữa vịnh, văn hóa ngư dân truyền thống.',
-                        details: 'Chèo thuyền kayak vào làng rất thú vị. Mua hải sản tươi ngay tại chỗ.',
-                        rating: '4.6'
-                    },
+                    { name: '🚢 Tour ngủ đêm trên vịnh', desc: 'Trải nghiệm không thể bỏ qua — ngủ trên thuyền giữa vịnh.', details: 'Tour 2N1Đ ~1.5–3M/người. Book sớm mùa hè vì rất đông. Sunrise trên vịnh cực đẹp.', rating: '4.9' },
+                    { name: '🏊 Hang Sửng Sốt & Đảo Ti Tốp', desc: 'Hang động kỳ vĩ nhất vịnh + leo núi ngắm toàn cảnh.', details: 'Ti Tốp có bãi tắm đẹp, leo 400 bậc lên đỉnh. Nên đi sáng sớm.', rating: '4.7' },
+                    { name: '🎣 Làng chài Cửa Vạn', desc: 'Làng chài nổi độc đáo giữa vịnh, văn hóa ngư dân truyền thống.', details: 'Chèo thuyền kayak vào làng rất thú vị. Mua hải sản tươi ngay tại chỗ.', rating: '4.6' },
                 ]
             },
             follow: '⚠️ Lưu ý: tránh đi Hạ Long <strong>tháng 7–8</strong> vì hay có bão. Tốt nhất: <strong>tháng 3–5</strong> hoặc <strong>10–11</strong>.'
         },
-
     };
 
     // ---- Core send logic ----
-
     function processMessage(text) {
         const t = text.toLowerCase();
 
         for (const key of Object.keys(RESPONSES)) {
             const resp = RESPONSES[key];
             if (resp.trigger(t)) {
-                // Handle by type
                 if (resp.type === 'card') {
                     addCardMessage(resp.card);
                     if (resp.follow) setTimeout(() => addMessage(resp.follow, false), 600);
@@ -284,8 +205,6 @@
                 if (resp.type === 'weather') { renderWeatherResponse(t); return; }
             }
         }
-
-        // Fallback
         addMessage(
             `🤔 TopGo đang học thêm để trả lời câu hỏi này. <br>` +
             `Bạn thử hỏi về: <strong>Đà Lạt, Đà Nẵng, Hội An, Hạ Long</strong> — ` +
@@ -293,10 +212,8 @@
         );
     }
 
-    // ---- Specialized renderers ----
-
+    // ---- Specialized renderers (unchanged but no scroll) ----
     function renderFoodResponse(t) {
-        // Detect city context
         let city = 'Hội An'; let foods = FOOD_DATA['hoian'];
         if (t.includes('đà nẵng')) { city = 'Đà Nẵng'; foods = FOOD_DATA['danang']; }
         else if (t.includes('đà lạt')) { city = 'Đà Lạt'; foods = FOOD_DATA['dalat']; }
@@ -322,12 +239,10 @@
       </div>
     </div>`;
         chatMessages.appendChild(div);
-        scrollBottom();
         setTimeout(() => addMessage(`😋 Ăn no rồi nhớ đi dạo phố xem nhé! Bạn muốn TopGo gợi ý thêm địa điểm ở <strong>${city}</strong> không?`, false), 600);
     }
 
     function renderBudgetResponse(t) {
-        // Detect city
         let city = 'Đà Nẵng'; let bdata = BUDGET_DATA['danang'];
         if (t.includes('đà lạt')) { city = 'Đà Lạt'; bdata = BUDGET_DATA['dalat']; }
         else if (t.includes('hội an')) { city = 'Hội An'; bdata = BUDGET_DATA['hoian']; }
@@ -344,9 +259,7 @@
         <table class="budget-table">
           <thead><tr><th>Hạng mục</th><th>Tiết kiệm</th><th>Thoải mái</th></tr></thead>
           <tbody>
-            ${bdata.rows.map(r => `
-              <tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>
-            `).join('')}
+            ${bdata.rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}
             <tr><td>💼 Tổng</td><td>${bdata.total[0]}</td><td>${bdata.total[1]}</td></tr>
           </tbody>
         </table>
@@ -354,12 +267,10 @@
       </div>
     </div>`;
         chatMessages.appendChild(div);
-        scrollBottom();
         setTimeout(() => addMessage(`📊 Muốn TopGo lên lịch trình chi tiết hơn cho <strong>${city}</strong>? Thử dùng <a href="/" style="color:var(--p1);font-weight:700">AI Planner</a> nhé!`, false), 700);
     }
 
     function renderWeatherResponse(t) {
-        // Detect city
         let city = 'Đà Nẵng'; let wdata = WEATHER_DATA['danang'];
         if (t.includes('đà lạt')) { city = 'Đà Lạt'; wdata = WEATHER_DATA['dalat']; }
         else if (t.includes('hà nội')) { city = 'Hà Nội'; wdata = WEATHER_DATA['hanoi']; }
@@ -390,11 +301,9 @@
       </div>
     </div>`;
         chatMessages.appendChild(div);
-        scrollBottom();
     }
 
-    // ---- Static data for responses ----
-
+    // ---- Static data (unchanged) ----
     const FOOD_DATA = {
         hoian: [
             { emoji: '🍜', name: 'Cao Lầu', desc: 'Mì đặc sản chỉ có ở Hội An với nước tương đặc trưng.', price: '35.000–60.000 ₫' },
@@ -430,128 +339,79 @@
 
     const BUDGET_DATA = {
         danang: {
-            rows: [
-                ['🛏 Lưu trú/đêm', '300K–600K', '800K–2M'],
-                ['✈️ Vé máy bay (KH)', '700K–1.2M', '1.2M–2.5M'],
-                ['🍜 Ăn uống/ngày', '150K–300K', '400K–800K'],
-                ['🚕 Di chuyển/ngày', '80K–150K', '200K–400K'],
-                ['🎫 Tham quan/ngày', '100K–300K', '400K–900K'],
-            ],
+            rows: [['🛏 Lưu trú/đêm', '300K–600K', '800K–2M'], ['✈️ Vé máy bay (KH)', '700K–1.2M', '1.2M–2.5M'], ['🍜 Ăn uống/ngày', '150K–300K', '400K–800K'], ['🚕 Di chuyển/ngày', '80K–150K', '200K–400K'], ['🎫 Tham quan/ngày', '100K–300K', '400K–900K']],
             total: ['~3.5M–6M', '~8M–15M'],
         },
         dalat: {
-            rows: [
-                ['🛏 Lưu trú/đêm', '200K–450K', '600K–1.5M'],
-                ['🚌 Xe khách (KH)', '300K–600K', '600K–1M'],
-                ['🍜 Ăn uống/ngày', '120K–250K', '300K–600K'],
-                ['🚕 Di chuyển/ngày', '50K–120K', '150K–300K'],
-                ['🎫 Tham quan/ngày', '50K–150K', '200K–500K'],
-            ],
+            rows: [['🛏 Lưu trú/đêm', '200K–450K', '600K–1.5M'], ['🚌 Xe khách (KH)', '300K–600K', '600K–1M'], ['🍜 Ăn uống/ngày', '120K–250K', '300K–600K'], ['🚕 Di chuyển/ngày', '50K–120K', '150K–300K'], ['🎫 Tham quan/ngày', '50K–150K', '200K–500K']],
             total: ['~2.5M–5M', '~6M–12M'],
         },
         hoian: {
-            rows: [
-                ['🛏 Lưu trú/đêm', '250K–500K', '700K–1.8M'],
-                ['🚌 Xe/Bay (KH)', '500K–1.2M', '1M–2.5M'],
-                ['🍜 Ăn uống/ngày', '100K–200K', '300K–700K'],
-                ['🚕 Di chuyển/ngày', '60K–120K', '150K–350K'],
-                ['🎫 Tham quan/ngày', '80K–200K', '250K–600K'],
-            ],
+            rows: [['🛏 Lưu trú/đêm', '250K–500K', '700K–1.8M'], ['🚌 Xe/Bay (KH)', '500K–1.2M', '1M–2.5M'], ['🍜 Ăn uống/ngày', '100K–200K', '300K–700K'], ['🚕 Di chuyển/ngày', '60K–120K', '150K–350K'], ['🎫 Tham quan/ngày', '80K–200K', '250K–600K']],
             total: ['~3M–5.5M', '~7M–14M'],
         },
         halong: {
-            rows: [
-                ['🚢 Tour 2N1Đ', '1.5M–2.5M', '3M–6M'],
-                ['🚌 Xe từ HN (KH)', '200K–400K', '400K–800K'],
-                ['🍜 Ăn uống (tour)', 'Thường bao gồm', 'Thường bao gồm'],
-                ['🎫 Tham quan', '100K–200K', '200K–500K'],
-            ],
+            rows: [['🚢 Tour 2N1Đ', '1.5M–2.5M', '3M–6M'], ['🚌 Xe từ HN (KH)', '200K–400K', '400K–800K'], ['🍜 Ăn uống (tour)', 'Thường bao gồm', 'Thường bao gồm'], ['🎫 Tham quan', '100K–200K', '200K–500K']],
             total: ['~2.5M–4M', '~5M–10M'],
         },
         phuquoc: {
-            rows: [
-                ['🛏 Resort/đêm', '500K–1M', '1.5M–5M'],
-                ['✈️ Bay (KH)', '800K–1.5M', '1.5M–3M'],
-                ['🍜 Ăn uống/ngày', '150K–350K', '400K–1M'],
-                ['🚕 Di chuyển/ngày', '100K–200K', '200K–500K'],
-                ['🏊 Tham quan/ngày', '100K–300K', '400K–1M'],
-            ],
+            rows: [['🛏 Resort/đêm', '500K–1M', '1.5M–5M'], ['✈️ Bay (KH)', '800K–1.5M', '1.5M–3M'], ['🍜 Ăn uống/ngày', '150K–350K', '400K–1M'], ['🚕 Di chuyển/ngày', '100K–200K', '200K–500K'], ['🏊 Tham quan/ngày', '100K–300K', '400K–1M']],
             total: ['~4M–8M', '~10M–25M'],
         },
     };
 
     const WEATHER_DATA = {
         danang: {
-            seasons: [
-                { icon: '☀️', label: 'T3–T8', temp: '27–35°C' },
-                { icon: '🌧️', label: 'T9–T11', temp: '20–26°C' },
-                { icon: '⛅', label: 'T12–T2', temp: '18–24°C' },
-                { icon: '🌊', label: 'Biển đẹp', temp: 'T3–T8' },
-            ],
+            seasons: [{ icon: '☀️', label: 'T3–T8', temp: '27–35°C' }, { icon: '🌧️', label: 'T9–T11', temp: '20–26°C' }, { icon: '⛅', label: 'T12–T2', temp: '18–24°C' }, { icon: '🌊', label: 'Biển đẹp', temp: 'T3–T8' }],
             tip: '✅ <strong>Mùa đẹp nhất:</strong> tháng 3–8 — nắng đẹp, biển êm, ít mưa. Tránh tháng 9–11 vì mưa lũ nhiều.',
             wear: 'Áo thun, quần short, kem chống nắng. Tháng 12–2 mang thêm áo khoác mỏng.',
         },
         dalat: {
-            seasons: [
-                { icon: '🌸', label: 'T3–T5', temp: '17–22°C' },
-                { icon: '🌧️', label: 'T5–T10', temp: '15–20°C' },
-                { icon: '🍂', label: 'T10–T12', temp: '14–20°C' },
-                { icon: '❄️', label: 'T12–T2', temp: '10–17°C' },
-            ],
+            seasons: [{ icon: '🌸', label: 'T3–T5', temp: '17–22°C' }, { icon: '🌧️', label: 'T5–T10', temp: '15–20°C' }, { icon: '🍂', label: 'T10–T12', temp: '14–20°C' }, { icon: '❄️', label: 'T12–T2', temp: '10–17°C' }],
             tip: '✅ <strong>Mùa đẹp nhất:</strong> tháng 11–1 (Festival Hoa) hoặc tháng 3–4 (khô ráo, se lạnh). Tránh T6–T9 vì mưa nhiều.',
             wear: 'Áo khoác len/hoodie mọi tháng. Buổi tối cần áo ấm dù mùa hè.',
         },
         hanoi: {
-            seasons: [
-                { icon: '🌺', label: 'T3–T4', temp: '18–25°C' },
-                { icon: '☀️', label: 'T5–T8', temp: '28–38°C' },
-                { icon: '🍂', label: 'T9–T11', temp: '20–27°C' },
-                { icon: '🌨️', label: 'T12–T2', temp: '12–20°C' },
-            ],
+            seasons: [{ icon: '🌺', label: 'T3–T4', temp: '18–25°C' }, { icon: '☀️', label: 'T5–T8', temp: '28–38°C' }, { icon: '🍂', label: 'T9–T11', temp: '20–27°C' }, { icon: '🌨️', label: 'T12–T2', temp: '12–20°C' }],
             tip: '✅ <strong>Mùa đẹp nhất:</strong> tháng 10–11 (thu vàng, mát mẻ) và tháng 3–4 (xuân, ít mưa). Tránh T6–T8 vì nóng ẩm.',
             wear: 'T3–T11: áo thun + quần dài. T12–T2: áo ấm, khăn len. Mang ô luôn.',
         },
         phuquoc: {
-            seasons: [
-                { icon: '☀️', label: 'T11–T4', temp: '27–33°C' },
-                { icon: '🌧️', label: 'T5–T10', temp: '25–30°C' },
-                { icon: '🏖️', label: 'Mùa khô', temp: 'T11–T4' },
-                { icon: '🌊', label: 'Biển đẹp', temp: 'T11–T3' },
-            ],
+            seasons: [{ icon: '☀️', label: 'T11–T4', temp: '27–33°C' }, { icon: '🌧️', label: 'T5–T10', temp: '25–30°C' }, { icon: '🏖️', label: 'Mùa khô', temp: 'T11–T4' }, { icon: '🌊', label: 'Biển đẹp', temp: 'T11–T3' }],
             tip: '✅ <strong>Mùa đẹp nhất:</strong> tháng 11–4 (khô, biển trong). Tháng 5–10 mưa nhiều, biển động.',
             wear: 'Quần short, áo thun, dép xốp và đồ bơi. Mang áo khoác nhẹ cho buổi tối.',
         },
         halong: {
-            seasons: [
-                { icon: '🌸', label: 'T3–T5', temp: '18–25°C' },
-                { icon: '☀️', label: 'T6–T8', temp: '27–33°C' },
-                { icon: '🍂', label: 'T9–T11', temp: '20–27°C' },
-                { icon: '❄️', label: 'T12–T2', temp: '12–18°C' },
-            ],
+            seasons: [{ icon: '🌸', label: 'T3–T5', temp: '18–25°C' }, { icon: '☀️', label: 'T6–T8', temp: '27–33°C' }, { icon: '🍂', label: 'T9–T11', temp: '20–27°C' }, { icon: '❄️', label: 'T12–T2', temp: '12–18°C' }],
             tip: '✅ <strong>Mùa đẹp nhất:</strong> tháng 3–5 và 10–11. Tránh T7–T8 vì bão. T12–T2 se lạnh nhưng ít khách.',
             wear: 'T3–T9: áo thun, áo khoác mỏng. T10–T2: áo len, áo gió chắn hơi nước vịnh.',
         },
     };
 
-    // ---- Send flow ----
-
+    // ---- Send message (MODIFIED: scroll to user message only) ----
     function sendMessage(textOverride) {
         const text = (textOverride || chatInput.value).trim();
         if (!text) return;
         addMessage(text, true);
         chatInput.value = '';
-        // Disable send while "AI thinking"
+
+        // Scroll to the user message just added
+        const lastUserMsg = document.querySelector('.message.user:last-child');
+        if (lastUserMsg) {
+            lastUserMsg.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         chatSend.disabled = true;
         showTyping();
         setTimeout(() => {
             removeTyping();
             processMessage(text);
+            // No additional scrolling
             chatSend.disabled = false;
         }, 700 + Math.random() * 400);
     }
 
     function sendSuggestion(text) {
-        // Hide suggestion chips after first use
         const chips = document.querySelector('.chat-suggestions');
         if (chips) { chips.style.opacity = '0'; setTimeout(() => chips.remove(), 300); }
         sendMessage(text);
