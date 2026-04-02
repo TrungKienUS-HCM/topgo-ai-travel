@@ -1,0 +1,619 @@
+{% extends "base.html" %}
+
+{% block title %}TopGo.AI — Smart Tourism Planner{% endblock %}
+
+{% block content %}
+<div class="screen active" id="screen-form">
+    <section class="hero">
+        <svg class="flight-path-svg" viewBox="0 0 1200 40" preserveAspectRatio="none" fill="none"
+            xmlns="http://www.w3.org/2000/svg">
+            <path d="M0 30 Q300 8 600 20 Q900 32 1200 10" stroke="white" stroke-width="1.5" stroke-dasharray="8 6"
+                opacity=".35" />
+        </svg>
+        <div class="hero-plane"></div>
+        <div class="hero-eyebrow"><span class="hero-dot"></span> AI Itinerary Planner · Powered by TopGo.AI</div>
+        <h1>Lên lịch trình <em>hoàn hảo</em><br>trong tích tắc ✦</h1>
+        <p class="hero-sub">Điền thông tin, AI sẽ tạo lịch trình tối ưu, gợi ý phương tiện và chi phí phù hợp nhất cho
+            chuyến đi của bạn.</p>
+    </section>
+    <div class="form-wrapper">
+        <div class="ticket-card glass-card">
+            <div class="ticket-bar">
+                <div class="tb-brand">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
+                    </svg>
+                    <div>
+                        <div class="tb-brand-name">TopGo.AI</div>
+                        <div class="tb-brand-sub">Smart Tourism Planner</div>
+                    </div>
+                </div>
+                <div class="tb-label">BOARDING PASS · AI ITINERARY</div>
+                <div class="tb-trip" id="tb-trip-id">TRIP — AI·GEN·2026</div>
+            </div>
+            <div class="ticket-body">
+                <div class="ticket-main">
+                    <div class="from-to">
+                        <div class="ft-block">
+                            <span class="ft-label">Xuất phát từ</span>
+                            <div class="ft-city-display" id="ft-from-city">—</div>
+                            <div class="ft-city-sub" id="ft-from-sub">Nhập điểm xuất phát bên dưới</div>
+                        </div>
+                        <div class="ft-middle">
+                            <div class="ft-plane-icon">
+                                <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
+                                </svg>
+                            </div>
+                            <div class="ft-dashed"></div>
+                        </div>
+                        <div class="ft-block" style="text-align:right">
+                            <span class="ft-label" style="text-align:right;display:block">Điểm đến</span>
+                            <div class="ft-city-display" id="ft-to-city">—</div>
+                            <div class="ft-city-sub" id="ft-to-sub">Chọn thành phố bên dưới</div>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label class="label-sm">Địa điểm xuất phát</label>
+                        <div class="input-wrap">
+                            <input class="text-input" id="dep-input" type="text"
+                                placeholder="Mặc định là điểm đến đầu tiên..." list="dep-suggestions">
+                            <datalist id="dep-suggestions">
+                                <option value="Sân bay Nội Bài, Hà Nội">
+                                <option value="Ga Hà Nội">
+                                <option value="Sân bay Đà Nẵng">
+                                <option value="Sân bay Tân Sơn Nhất, TP.HCM">
+                                <option value="Bến xe Miền Đông, TP.HCM">
+                                <option value="Ga Sài Gòn">
+                                <option value="Sân bay Phú Bài, Huế">
+                            </datalist>
+                        </div>
+                    </div>
+                    <div class="field-group">
+                        <label class="label-sm">Thành phố muốn đến <span
+                                style="color:var(--error);margin-left:3px">*</span></label>
+                        <div class="dd-wrap" id="dd-city">
+                            <div class="dd-trigger" id="city-trigger" onclick="toggleDrop('dd-city')" tabindex="0">
+                                <input class="dd-search" id="city-search" type="text" placeholder="Tìm thành phố..."
+                                    oninput="filterCities(this.value)" onfocus="openDrop('dd-city')"
+                                    onblur="setTimeout(()=>closeDrop('dd-city'),200)" autocomplete="off">
+                                <span class="dd-chevron">▾</span>
+                            </div>
+                            <div class="dd-list" id="city-list"></div>
+                        </div>
+                        <div class="f-err" id="err-city">Vui lòng chọn 1 thành phố</div>
+                    </div>
+                    <div class="field-group">
+                        <label class="label-sm">Các điểm tham quan cụ thể</label>
+                        <div class="dd-wrap" id="dd-place">
+                            <div class="places-box" id="places-box"
+                                onclick="document.getElementById('place-search').focus()">
+                                <input class="places-search" id="place-search" type="text"
+                                    placeholder="Tìm và thêm địa điểm..." oninput="filterPlaces(this.value)"
+                                    onfocus="openDrop('dd-place')" onblur="setTimeout(()=>closeDrop('dd-place'),200)">
+                            </div>
+                            <div class="dd-list" id="place-list"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="ticket-perf">
+                    <div class="perf-notch-top"></div>
+                    <div class="perf-notch-bot"></div>
+                </div>
+                <div class="ticket-stub">
+                    <div class="stub-field">
+                        <span class="stub-label">Số hành khách <span style="color:var(--error)">*</span></span>
+                        <div class="stepper">
+                            <button class="step-btn" id="pax-minus" onclick="adjustPax(-1)" disabled>−</button>
+                            <input class="step-val" id="pax-val" type="number" value="1" min="1" max="50" readonly>
+                            <button class="step-btn" id="pax-plus" onclick="adjustPax(1)">+</button>
+                        </div>
+                        <div class="f-err" id="err-pax" style="margin-top:5px">Từ 1 đến 50 người</div>
+                    </div>
+                    <div class="stub-field">
+                        <span class="stub-label">Ngày khởi hành <span style="color:var(--error)">*</span></span>
+                        <input class="stub-date" id="date-start" type="date" onchange="validateDates()">
+                        <div class="f-err" id="err-date-s">Ngày không hợp lệ</div>
+                    </div>
+                    <div class="stub-field">
+                        <span class="stub-label">Giờ khởi hành (dự kiến)</span>
+                        <input class="stub-date" id="time-start" type="time" value="07:00">
+                    </div>
+                    <div class="stub-field">
+                        <span class="stub-label">Ngày kết thúc <span style="color:var(--error)">*</span></span>
+                        <input class="stub-date" id="date-end" type="date" onchange="validateDates()">
+                        <div class="date-duration" id="date-dur"></div>
+                        <div class="f-err" id="err-date-e">Phải sau ngày khởi hành, tối đa 30 ngày</div>
+                    </div>
+                    <div class="stub-field">
+                        <span class="stub-label">Giờ kết thúc (dự kiến)</span>
+                        <input class="stub-date" id="time-end" type="time" value="18:00">
+                    </div>
+                    <div class="stub-field">
+                        <span class="stub-label">Loại hình phương tiện</span>
+                        <select class="stub-date" id="transport-type">
+                            <option value="Xe khách">Xe khách</option>
+                            <option value="Máy bay">Máy bay</option>
+                            <option value="Tàu hỏa">Tàu hỏa</option>
+                            <option value="Ô tô riêng">Ô tô riêng</option>
+                            <option value="Xe máy">Xe máy</option>
+                            <option value="Xe đạp">Xe đạp</option>
+                            <option value="Thuê ô tô tự lái">Thuê ô tô tự lái</option>
+                        </select>
+                    </div>
+                    <div class="stub-field">
+                        <span class="stub-label">Loại hình chỗ ở</span>
+                        <select class="stub-date" id="accommodation-type">
+                            <option value="Khách sạn">Khách sạn</option>
+                            <option value="Homestay">Homestay</option>
+                            <option value="Airbnb">Airbnb</option>
+                            <option value="Resort">Resort</option>
+                            <option value="Villa">Villa</option>
+                            <option value="Căn hộ">Căn hộ</option>
+                        </select>
+                    </div>
+                    <div class="stub-field">
+                        <span class="stub-label">Ngân sách tổng <span style="color:var(--error)">*</span></span>
+                        <div class="budget-wrap">
+                            <span class="budget-pre">₫</span>
+                            <input class="budget-input" id="budget-input" type="text" placeholder="0"
+                                oninput="formatBudget(this)" onblur="validateBudget()">
+                        </div>
+                        <div class="budget-chips">
+                            <button class="b-chip" onclick="setBudget('500000',this)">500K</button>
+                            <button class="b-chip" onclick="setBudget('1000000',this)">1M</button>
+                            <button class="b-chip" onclick="setBudget('2000000',this)">2M</button>
+                            <button class="b-chip" onclick="setBudget('5000000',this)">5M</button>
+                            <button class="b-chip" onclick="setBudget('10000000',this)">10M</button>
+                            <button class="b-chip" onclick="setBudget('20000000',this)">20M</button>
+                        </div>
+                        <div class="budget-pp" id="budget-pp"></div>
+                        <div class="f-err" id="err-budget">Tối thiểu 100.000 ₫</div>
+                    </div>
+                </div>
+            </div>
+            <div class="ticket-bottom">
+                <div class="section-head">Sở thích &amp; phong cách du lịch</div>
+                <div class="pref-chips" id="pref-chips">
+                    <button class="p-chip" onclick="togglePref(this,'Ẩm thực địa phương')">Ẩm thực địa phương</button>
+                    <button class="p-chip" onclick="togglePref(this,'Di tích lịch sử')">Di tích lịch sử</button>
+                    <button class="p-chip" onclick="togglePref(this,'Thiên nhiên &amp; leo núi')">Thiên nhiên &amp; leo
+                        núi</button>
+                    <button class="p-chip" onclick="togglePref(this,'Mua sắm')">Mua sắm</button>
+                    <button class="p-chip" onclick="togglePref(this,'Check-in &amp; chụp ảnh')">Check-in đẹp</button>
+                    <button class="p-chip" onclick="togglePref(this,'Nghệ thuật &amp; văn hóa')">Nghệ thuật &amp; văn
+                        hóa</button>
+                    <button class="p-chip" onclick="togglePref(this,'Biển &amp; bơi lội')">Biển &amp; bơi lội</button>
+                    <button class="p-chip" onclick="togglePref(this,'Spa &amp; nghỉ dưỡng')">Spa &amp; nghỉ
+                        dưỡng</button>
+                    <button class="p-chip" onclick="togglePref(this,'Phù hợp gia đình')">Gia đình &amp; trẻ em</button>
+                    <button class="p-chip" onclick="togglePref(this,'Thuê xe tự lái')">Thuê xe tự lái</button>
+                </div>
+                <div class="section-head">Ghi chú thêm cho AI</div>
+                <textarea class="notes-area" id="notes-input"
+                    placeholder="Ví dụ: Có trẻ nhỏ 5 tuổi, không đi xa được, thích ngủ nướng buổi sáng, dị ứng hải sản, muốn có lịch trình không quá dày..."
+                    maxlength="500" oninput="updateCharCount(this,'notes-count')"></textarea>
+                <div class="notes-foot"><span class="char-c" id="notes-count">0 / 500</span></div>
+            </div>
+            <div class="ticket-actions">
+                <button class="btn-reset" onclick="showPopup('popup-reset')">Điền lại</button>
+                <button class="btn-gen" id="btn-gen" onclick="handleGenerate()">
+                    Tạo lịch trình với AI
+                    <span class="plane-tail">✈</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="screen" id="screen-loading">
+    <div class="loading-wrap">
+        <div class="loading-plane"></div>
+        <div class="loading-dots">
+            <div class="ld"></div>
+            <div class="ld"></div>
+            <div class="ld"></div>
+        </div>
+        <div class="loading-title">AI đang lên lịch trình cho bạn...</div>
+        <div class="loading-steps">
+            <div class="ls done" id="ls-1"><span class="ls-ico">✓</span> Phân tích yêu cầu chuyến đi</div>
+            <div class="ls active" id="ls-2">
+                <div class="ls-spin"></div> Tìm kiếm địa điểm phù hợp
+            </div>
+            <div class="ls" id="ls-3"><span class="ls-ico">○</span> Tối ưu hóa lộ trình</div>
+            <div class="ls" id="ls-4"><span class="ls-ico">○</span> Gợi ý phương tiện &amp; chi phí</div>
+            <div class="ls" id="ls-5"><span class="ls-ico">○</span> Hoàn thiện lịch trình</div>
+        </div>
+        <button class="loading-cancel" onclick="showScreen('form')">Hủy</button>
+    </div>
+</div>
+
+<div class="screen" id="screen-result">
+    <div class="result-wrap">
+        <div class="result-header glass-card">
+            <div style="flex:1;min-width:200px">
+                <div class="result-title">Hành trình Đà Nẵng · Hội An · Bà Nà Hills</div>
+                <div class="result-meta">
+                    <span class="m-item">📅 <strong>25/06 – 28/06/2025</strong></span>
+                    <span class="m-item">👤 <strong>4 người</strong></span>
+                    <span class="m-item">💰 <strong>~8.200.000 ₫</strong></span>
+                    <span class="m-item">🌤 <strong>Nắng, 31°C</strong></span>
+                    <span class="score-badge">⭐ 4.7 AI Score</span>
+                </div>
+            </div>
+            <div class="result-acts">
+                <button class="r-btn r-btn-out" onclick="showScreen('form')">Sửa yêu cầu</button>
+                <button class="r-btn r-btn-solid" onclick="handleSave()">Lưu lịch trình</button>
+            </div>
+        </div>
+        <div class="result-grid">
+            <div>
+                <div class="map-panel glass-card">
+                    <div class="map-hd">Sơ đồ hành trình</div>
+                    <div class="map-sim">
+                        <div class="map-road" style="left:12%;top:42%;width:76%;height:3px;transform:rotate(-4deg)">
+                        </div>
+                        <div class="map-pin" style="left:26%;top:26%">
+                            <div class="m-bubble" style="background:var(--p1)">Khách sạn</div>
+                            <div class="m-tail" style="border-top:7px solid var(--p1)"></div>
+                        </div>
+                        <div class="map-pin" style="left:56%;top:33%">
+                            <div class="m-bubble" style="background:var(--success)">Bãi Mỹ Khê</div>
+                            <div class="m-tail" style="border-top:7px solid var(--success)"></div>
+                        </div>
+                        <div class="map-pin" style="left:72%;top:56%">
+                            <div class="m-bubble" style="background:#7B4FBE">Cầu Vàng</div>
+                            <div class="m-tail" style="border-top:7px solid #7B4FBE"></div>
+                        </div>
+                        <div class="map-pin" style="left:31%;top:70%">
+                            <div class="m-bubble" style="background:var(--gold)">Phố Cổ Hội An</div>
+                            <div class="m-tail" style="border-top:7px solid var(--gold)"></div>
+                        </div>
+                    </div>
+                    <div class="map-legend">
+                        <div class="map-leg-item">
+                            <div class="map-leg-dot" style="background:var(--p1)"></div>Khách sạn &amp; lưu trú
+                        </div>
+                        <div class="map-leg-item">
+                            <div class="map-leg-dot" style="background:var(--success)"></div>Địa điểm tham quan
+                        </div>
+                        <div class="map-leg-item">
+                            <div class="map-leg-dot" style="background:var(--gold)"></div>Ẩm thực &amp; văn hóa
+                        </div>
+                    </div>
+                    <div class="map-stats">
+                        <div class="map-stat"><span class="lbl">Tổng quãng đường</span><span class="val">~148 km</span>
+                        </div>
+                        <div class="map-stat"><span class="lbl">Số địa điểm</span><span class="val">11 điểm</span></div>
+                        <div class="map-stat"><span class="lbl">Chi phí ước tính</span><span class="val"
+                                style="color:var(--p1)">8.200.000 ₫</span></div>
+                        <div class="map-stat"><span class="lbl">Chi phí / người</span><span class="val"
+                                style="color:var(--p2)">2.050.000 ₫</span></div>
+                    </div>
+                </div>
+            </div>
+            <div class="itinerary">
+                <!-- Day 1 -->
+                <div class="day-block glass-card">
+                    <div class="day-hd">
+                        <div class="day-badge">NGÀY 1</div>
+                        <div class="day-title">Thứ Tư · 25/06/2025 — Đà Nẵng</div>
+                        <div class="day-stats"><span class="day-st">4 điểm</span><span class="day-st">~9
+                                tiếng</span><span class="day-st">~1.8M ₫</span></div>
+                    </div>
+                    <div class="stop-card">
+                        <div class="stop-tl">
+                            <div class="stop-ts">07:00</div>
+                            <div class="stop-dot">✈</div>
+                            <div class="stop-te">08:30</div>
+                            <div class="stop-ln"></div>
+                        </div>
+                        <div class="stop-ct">
+                            <div class="stop-top">
+                                <div class="stop-img">✈</div>
+                                <div>
+                                    <div class="stop-nm"><a href="#" target="_blank">Sân bay Đà Nẵng (DAD)</a><span
+                                            class="stop-rt">⭐ 4.2</span></div>
+                                    <div class="stop-desc">Bay từ Hà Nội, chuyến sớm để tận dụng ngày đầu. Nhận phòng
+                                        khách sạn.</div>
+                                    <div class="stop-dur">⏱ Di chuyển: 30 phút (taxi) · Khoảng cách: 5 km</div>
+                                    <div class="transport-simple">🚕 Di chuyển bằng taxi, ~30 phút, dự kiến đến lúc
+                                        08:30</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stop-card">
+                        <div class="stop-tl">
+                            <div class="stop-ts">09:00</div>
+                            <div class="stop-dot">🏖</div>
+                            <div class="stop-te">12:00</div>
+                            <div class="stop-ln"></div>
+                        </div>
+                        <div class="stop-ct">
+                            <div class="stop-top">
+                                <div class="stop-img">🏖</div>
+                                <div>
+                                    <div class="stop-nm"><a href="#" target="_blank">Bãi biển Mỹ Khê</a><span
+                                            class="stop-rt">⭐ 4.8</span></div>
+                                    <div class="stop-desc">Một trong những bãi biển đẹp nhất châu Á. Nước trong xanh,
+                                        cát trắng mịn.</div>
+                                    <div class="stop-dur">⏱ Tham quan ~3 tiếng · Khoảng cách từ trung tâm: 3 km</div>
+                                    <div class="transport-simple">🚕 Di chuyển bằng taxi, ~10 phút, dự kiến đến lúc
+                                        09:10</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stop-card">
+                        <div class="stop-tl">
+                            <div class="stop-ts">12:30</div>
+                            <div class="stop-dot">🍜</div>
+                            <div class="stop-te">14:00</div>
+                            <div class="stop-ln"></div>
+                        </div>
+                        <div class="stop-ct">
+                            <div class="stop-top">
+                                <div class="stop-img">🍜</div>
+                                <div>
+                                    <div class="stop-nm"><a href="#" target="_blank">Quán Mỳ Quảng Bà Cụ</a><span
+                                            class="stop-rt">⭐ 4.6</span></div>
+                                    <div class="stop-desc">Quán mỳ quảng lâu đời, đông khách địa phương, giá bình dân.
+                                    </div>
+                                    <div class="stop-dur">⏱ ~1.5 tiếng · ~80.000 ₫/người</div>
+                                    <div class="transport-simple">🚶 Di chuyển bộ, ~5 phút, dự kiến đến lúc 12:35</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stop-card">
+                        <div class="stop-tl">
+                            <div class="stop-ts">15:00</div>
+                            <div class="stop-dot">🏛</div>
+                            <div class="stop-te">17:00</div>
+                        </div>
+                        <div class="stop-ct">
+                            <div class="stop-top">
+                                <div class="stop-img">🏛</div>
+                                <div>
+                                    <div class="stop-nm"><a href="#" target="_blank">Bảo tàng Điêu khắc Chăm</a><span
+                                            class="stop-rt">⭐ 4.5</span></div>
+                                    <div class="stop-desc">Bảo tàng lưu giữ bộ sưu tập hiện vật Chăm lớn nhất thế giới.
+                                    </div>
+                                    <div class="stop-dur">⏱ Tham quan ~2 tiếng · Khoảng cách từ trung tâm: 1.5 km</div>
+                                    <div class="transport-simple">🚕 Di chuyển bằng taxi, ~10 phút, dự kiến đến lúc
+                                        15:10</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Hotel for Day 1 -->
+                    <div class="hotel-card-inline">
+                        <div class="hotel-img-inline">🏨</div>
+                        <div class="hotel-info-inline">
+                            <div class="hotel-name-inline">Pulchra Resort Đà Nẵng</div>
+                            <div class="hotel-address-inline">📍 Sơn Trà, Đà Nẵng</div>
+                            <div class="hotel-rating-inline">⭐ 4.8 · (1,234 đánh giá)</div>
+                            <div class="hotel-price-inline">💰 Từ 1.850.000 ₫/đêm</div>
+                            <div class="hotel-distance-inline">🚗 Cách trung tâm 2.5km · Cách bãi biển 500m</div>
+                            <div class="hotel-amenities-inline">🏊 Hồ bơi vô cực · 🍳 Ăn sáng · 🚗 Đỗ xe miễn phí</div>
+                            <div class="hotel-score-inline">🔝 Độ phù hợp: 9.2/10</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Day 2 -->
+                <div class="day-block glass-card">
+                    <div class="day-hd">
+                        <div class="day-badge">NGÀY 2</div>
+                        <div class="day-title">Thứ Năm · 26/06/2025 — Bà Nà Hills</div>
+                        <div class="day-stats"><span class="day-st">2 điểm</span><span class="day-st">~10
+                                tiếng</span><span class="day-st">~3.2M ₫</span></div>
+                    </div>
+                    <div class="stop-card">
+                        <div class="stop-tl">
+                            <div class="stop-ts">07:30</div>
+                            <div class="stop-dot">🌉</div>
+                            <div class="stop-te">17:00</div>
+                        </div>
+                        <div class="stop-ct">
+                            <div class="stop-top">
+                                <div class="stop-img">🌉</div>
+                                <div>
+                                    <div class="stop-nm"><a href="#" target="_blank">Bà Nà Hills · Cầu Vàng</a><span
+                                            class="stop-rt">⭐ 4.7</span></div>
+                                    <div class="stop-desc">Khu du lịch trên đỉnh núi nổi tiếng với Cầu Vàng biểu tượng.
+                                    </div>
+                                    <div class="stop-dur">⏱ Cả ngày ~9 tiếng · Vé ~750.000 ₫/người</div>
+                                    <div class="transport-simple">🚌 Di chuyển bằng xe đưa đón, ~45 phút, dự kiến đến
+                                        lúc 08:15</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Hotel for Day 2 -->
+                    <div class="hotel-card-inline">
+                        <div class="hotel-img-inline">🏨</div>
+                        <div class="hotel-info-inline">
+                            <div class="hotel-name-inline">Fusion Suites Đà Nẵng</div>
+                            <div class="hotel-address-inline">📍 Phạm Văn Đồng, Đà Nẵng</div>
+                            <div class="hotel-rating-inline">⭐ 4.6 · (892 đánh giá)</div>
+                            <div class="hotel-price-inline">💰 Từ 1.250.000 ₫/đêm</div>
+                            <div class="hotel-distance-inline">🚗 Cách trung tâm 1km · Cách bãi biển 200m</div>
+                            <div class="hotel-amenities-inline">🧘 Spa · 🥗 Nhà hàng · 🍸 Rooftop bar</div>
+                            <div class="hotel-score-inline">🔝 Độ phù hợp: 8.9/10</div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Day 3 -->
+                <div class="day-block glass-card">
+                    <div class="day-hd">
+                        <div class="day-badge">NGÀY 3</div>
+                        <div class="day-title">Thứ Sáu · 27/06/2025 — Hội An</div>
+                        <div class="day-stats"><span class="day-st">3 điểm</span><span class="day-st">~8
+                                tiếng</span><span class="day-st">~1.5M ₫</span></div>
+                    </div>
+                    <div class="stop-card">
+                        <div class="stop-tl">
+                            <div class="stop-ts">08:00</div>
+                            <div class="stop-dot">🏮</div>
+                            <div class="stop-te">10:30</div>
+                            <div class="stop-ln"></div>
+                        </div>
+                        <div class="stop-ct">
+                            <div class="stop-top">
+                                <div class="stop-img">🏮</div>
+                                <div>
+                                    <div class="stop-nm"><a href="#" target="_blank">Phố Cổ Hội An</a><span
+                                            class="stop-rt">⭐ 4.9</span></div>
+                                    <div class="stop-desc">Di sản văn hóa thế giới, kiến trúc cổ kính, không gian yên
+                                        bình.</div>
+                                    <div class="stop-dur">⏱ Tham quan ~2.5 tiếng · Khoảng cách từ trung tâm: 25 km</div>
+                                    <div class="transport-simple">🚗 Di chuyển bằng ô tô riêng, ~45 phút, dự kiến đến
+                                        lúc 08:45</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stop-card">
+                        <div class="stop-tl">
+                            <div class="stop-ts">11:00</div>
+                            <div class="stop-dot">🍲</div>
+                            <div class="stop-te">12:30</div>
+                            <div class="stop-ln"></div>
+                        </div>
+                        <div class="stop-ct">
+                            <div class="stop-top">
+                                <div class="stop-img">🍲</div>
+                                <div>
+                                    <div class="stop-nm"><a href="#" target="_blank">Cao Lầu Thanh</a><span
+                                            class="stop-rt">⭐ 4.5</span></div>
+                                    <div class="stop-desc">Thưởng thức món cao lầu đặc sản Hội An.</div>
+                                    <div class="stop-dur">⏱ ~1.5 tiếng · ~50.000 ₫/người</div>
+                                    <div class="transport-simple">🚶 Di chuyển bộ, ~10 phút, dự kiến đến lúc 11:10</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stop-card">
+                        <div class="stop-tl">
+                            <div class="stop-ts">14:00</div>
+                            <div class="stop-dot">🏖</div>
+                            <div class="stop-te">16:30</div>
+                        </div>
+                        <div class="stop-ct">
+                            <div class="stop-top">
+                                <div class="stop-img">🏖</div>
+                                <div>
+                                    <div class="stop-nm"><a href="#" target="_blank">Biển Cửa Đại</a><span
+                                            class="stop-rt">⭐ 4.3</span></div>
+                                    <div class="stop-desc">Bãi biển đẹp, nước ấm, thích hợp tắm biển.</div>
+                                    <div class="stop-dur">⏱ Tham quan ~2.5 tiếng · Khoảng cách từ phố cổ: 5 km</div>
+                                    <div class="transport-simple">🛵 Di chuyển bằng xe máy, ~15 phút, dự kiến đến lúc
+                                        14:15</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Hotel for Day 3 -->
+                    <div class="hotel-card-inline">
+                        <div class="hotel-img-inline">🏨</div>
+                        <div class="hotel-info-inline">
+                            <div class="hotel-name-inline">Monarque Hotel Đà Nẵng</div>
+                            <div class="hotel-address-inline">📍 Nguyễn Văn Thoại, Đà Nẵng</div>
+                            <div class="hotel-rating-inline">⭐ 4.5 · (674 đánh giá)</div>
+                            <div class="hotel-price-inline">💰 Từ 980.000 ₫/đêm</div>
+                            <div class="hotel-distance-inline">🚗 Cách trung tâm 1.8km · Cách bãi biển 300m</div>
+                            <div class="hotel-amenities-inline">🏋️ Gym · 🍜 Nhà hàng Việt · 🚌 Dịch vụ đưa đón</div>
+                            <div class="hotel-score-inline">🔝 Độ phù hợp: 8.5/10</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feedback-card glass-card">
+                    <div class="feedback-title">Phản hồi cho AI · Điều chỉnh lịch trình</div>
+                    <textarea class="feedback-area" id="feedback-input"
+                        placeholder="Ví dụ: Thêm buổi tối xem show ánh sáng, hoặc đổi Bà Nà Hills lấy núi Sơn Trà..."
+                        maxlength="500" oninput="updateCharCount(this,'feedback-count')"></textarea>
+                    <div class="feedback-foot">
+                        <span class="feedback-lim" id="feedback-count">0 / 500</span>
+                        <button class="btn-feedback" onclick="handleFeedback()">Cập nhật lịch trình</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="screen" id="screen-error">
+    <div class="error-hero">
+        <div
+            style="font-size:11px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.55);text-transform:uppercase;margin-bottom:8px">
+            TopGo.AI · AI Planner</div>
+        <h2>Không thể tạo lịch trình</h2>
+    </div>
+    <div class="error-outer">
+        <div class="error-card glass-card">
+            <div class="error-icon">⚠️</div>
+            <div class="error-title">Yêu cầu chưa đạt điều kiện</div>
+            <div class="error-msg">AI không thể tạo lịch trình do một số thông tin chưa hợp lệ. Vui lòng kiểm tra và
+                điều chỉnh các mục sau:</div>
+            <div class="error-issues" id="error-issues">
+                <div class="error-issue">📅 Khoảng thời gian vượt quá 30 ngày (hiện tại: 35 ngày)</div>
+                <div class="error-issue">💰 Ngân sách quá thấp (tối thiểu ~200.000 ₫/người/ngày)</div>
+                <div class="error-issue">📍 Không tìm thấy đủ địa điểm trong khu vực đã chọn</div>
+            </div>
+            <button class="btn-back-err" onclick="showScreen('form')">← Quay lại chỉnh sửa</button>
+        </div>
+    </div>
+</div>
+
+<div class="popup-ov" id="popup-reset">
+    <div class="popup-card glass-card">
+        <div class="popup-icon">🔄</div>
+        <div class="popup-title">Điền lại từ đầu?</div>
+        <div class="popup-msg">Toàn bộ thông tin bạn đã nhập sẽ bị xóa và đặt về mặc định. Thao tác này không thể hoàn
+            tác.</div>
+        <div class="popup-acts">
+            <button class="popup-cancel" onclick="closePopup('popup-reset')">Hủy</button>
+            <button class="popup-confirm" onclick="doReset()">Xóa tất cả</button>
+        </div>
+    </div>
+</div>
+
+<!-- Full-width ads stacked after footer -->
+<div class="fullwidth-ad ad-chatbot" onclick="window.location.href='{{ url_for('chatbot') }}'">
+    <div class="ad-overlay-full">
+        <div class="ad-content">
+            <h3>Trò chuyện cùng TopChat</h3>
+            <p>Gợi ý địa điểm, thời tiết, mẹo du lịch – hỗ trợ 24/7</p>
+            <div class="ad-btn-glass">Khám phá ngay</div>
+        </div>
+    </div>
+</div>
+<div class="fullwidth-ad ad-itinerary" onclick="window.location.href='{{ url_for('index') }}'">
+    <div class="ad-overlay-full">
+        <div class="ad-content">
+            <h3>AI Itinerary Planner</h3>
+            <p>Lên lịch trình thông minh, tối ưu thời gian & chi phí</p>
+            <div class="ad-btn-glass">Bắt đầu ngay</div>
+        </div>
+    </div>
+</div>
+<div class="fullwidth-ad ad-footer" onclick="window.location.href='{{ url_for('chatbot') }}'">
+    <div class="ad-overlay-full">
+        <div class="ad-content">
+            <h3>TopGo AI – Đồng hành cùng mọi chuyến đi</h3>
+            <p>Từ lên ý tưởng đến đặt chỗ, AI lo liệu giúp bạn</p>
+            <div class="ad-btn-glass">Trải nghiệm ngay</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Page-specific scripts if needed
+</script>
+{% endblock %}

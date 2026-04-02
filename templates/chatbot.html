@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}TopChat — Trợ lý du lịch AI{% endblock %}
+
+{% block content %}
+<div class="chatbot-fullscreen-with-nav">
+    <div class="chatbot-header-page">
+        <h1>Hãy để tui giúp bạn đi chơi thật zui!</h1>
+        <p>Trợ lý du lịch thông minh — sẵn sàng hỗ trợ bạn 24/7</p>
+    </div>
+    <div class="chatbot-container-full-width">
+        <div class="chatbot-messages-full-width" id="chatbot-messages">
+            <div class="message bot">
+                <div class="message-content">Đi "chữa lành" dễ lắm, TopGo chỉ cho!</div>
+            </div>
+        </div>
+        <div class="chatbot-input-area-full-width">
+            <input type="text" id="chatbot-input" placeholder="Nhập câu hỏi của bạn..."
+                class="chatbot-input-full-width">
+            <button id="chatbot-send" class="chatbot-send-full-width">Gửi</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const chatInput = document.getElementById('chatbot-input');
+    const chatSend = document.getElementById('chatbot-send');
+    const chatMessages = document.getElementById('chatbot-messages');
+
+    function addMessage(text, isUser, isCard = false, cardData = null) {
+        const div = document.createElement('div');
+        div.className = `message ${isUser ? 'user' : 'bot'}`;
+        if (isCard && cardData) {
+            div.innerHTML = `
+                <div class="message-content card-message">
+                    <div class="card-title">${cardData.title}</div>
+                    <div class="card-items-grid">
+                        ${cardData.items.map(item => `
+                            <div class="card-item-vertical">
+                                <div class="card-item-name-vertical">${item.name}</div>
+                                <div class="card-item-desc-vertical">${item.desc}</div>
+                                ${item.details ? `<div class="card-item-info-vertical">${item.details}</div>` : ''}
+                                <div class="card-item-rating-vertical">⭐ ${item.rating}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        } else {
+            div.innerHTML = `<div class="message-content">${text}</div>`;
+        }
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function sendMessage() {
+        const text = chatInput.value.trim();
+        if (!text) return;
+        addMessage(text, true);
+        chatInput.value = '';
+
+        setTimeout(() => {
+            if (text.toLowerCase().includes('đà lạt')) {
+                addMessage('Dạ, TopGo gợi ý các điểm hot hit ở Đà Lạt nè:', false, true, {
+                    title: '🌟 Địa điểm nổi bật ở Đà Lạt',
+                    items: [
+                        { name: 'Hồ Xuân Hương', desc: 'Trái tim thành phố, dạo thuyền, cà phê ngắm cảnh.', details: 'Nằm ngay trung tâm, rộng 5km². Buổi sáng sương mờ, chiều hoàng hôn tuyệt đẹp. Có thể thuê thuyền đạp vịt, xe ngựa dạo quanh.', rating: '4.8' },
+                        { name: 'Thung lũng Tình Yêu', desc: 'Khung cảnh lãng mạn, vườn hoa rực rỡ.', details: 'Công viên với nhiều khu vườn hoa, tượng tình yêu, cầu Vòng Tay. Thích hợp cho các cặp đôi, gia đình. Vé vào cửa 120.000đ/người.', rating: '4.5' },
+                        { name: 'Đỉnh LangBiang', desc: 'Chinh phục đỉnh núi, view toàn cảnh Đà Lạt.', details: 'Cao 2.167m, có thể đi bộ hoặc cáp treo. Từ đỉnh nhìn bao quát toàn thành phố. Nên đi sáng sớm để tránh sương mù.', rating: '4.7' },
+                        { name: 'Làng hoa Vạn Thành', desc: 'Tham quan vườn hoa tươi, check-in cực xinh.', details: 'Làng hoa lớn nhất Đà Lạt với hàng trăm loại hoa. Được mùa quanh năm, đặc biệt đẹp vào dịp Tết. Vào cửa miễn phí.', rating: '4.4' }
+                    ]
+                });
+            } else if (text.toLowerCase().includes('đà nẵng')) {
+                addMessage('Đà Nẵng có nhiều điểm đến thú vị lắm nha:', false, true, {
+                    title: '🏖️ Top địa điểm Đà Nẵng',
+                    items: [
+                        { name: 'Bà Nà Hills', desc: 'Cầu Vàng, làng Pháp, công viên giải trí.', details: 'Khu du lịch trên núi với cáp treo dài nhất thế giới. Vé 900k/người bao gồm cáp treo và hầu hết trò chơi. Nên đi cả ngày.', rating: '4.9' },
+                        { name: 'Bãi biển Mỹ Khê', desc: 'Bãi biển đẹp nhất hành tinh.', details: 'Cát trắng mịn, nước trong xanh. Được Forbes bình chọn là một trong 6 bãi biển đẹp nhất thế giới. Tắm biển miễn phí.', rating: '4.8' },
+                        { name: 'Cầu Rồng', desc: 'Biểu tượng thành phố, phun lửa cuối tuần.', details: 'Cây cầu hình rồng dài 666m, phun lửa và nước vào tối thứ 7, CN lúc 21h. Đi bộ trên cầu vào buổi tối rất thú vị.', rating: '4.6' },
+                        { name: 'Núi Sơn Trà', desc: 'Khu dự trữ sinh quyển, ngắm khỉ.', details: 'Rừng nguyên sinh với đa dạng sinh học. Có thể lái xe lên đỉnh bán đảo, ngắm thành phố từ cao. Voọc chà vá chân nâu đặc hữu.', rating: '4.5' }
+                    ]
+                });
+            } else {
+                addMessage('TopGo đang học hỏi thêm để trả lời tốt hơn. Bạn có thể hỏi về các điểm đến như Đà Lạt, Đà Nẵng, Hội An nhé!', false);
+            }
+        }, 500);
+    }
+
+    chatSend.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+</script>
+{% endblock %}
