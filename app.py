@@ -5,6 +5,7 @@ from flask import Flask, render_template, jsonify, request, send_from_directory
 
 app = Flask(__name__)
 
+# --- Static city data ---
 CITIES_DATA = [
     {
         "id": "dn",
@@ -174,6 +175,142 @@ PLACES_DATA = {
     ],
 }
 
+# Approximate road distances between cities (km)
+CITY_DISTANCES = {
+    ("ha", "hcm"): 1700,
+    ("hcm", "ha"): 1700,
+    ("ha", "dn"): 764,
+    ("dn", "ha"): 764,
+    ("ha", "hue"): 666,
+    ("hue", "ha"): 666,
+    ("ha", "hoian"): 773,
+    ("hoian", "ha"): 773,
+    ("ha", "nt"): 1278,
+    ("nt", "ha"): 1278,
+    ("ha", "dl"): 1480,
+    ("dl", "ha"): 1480,
+    ("ha", "ph"): 2050,
+    ("ph", "ha"): 2050,
+    ("ha", "hl"): 165,
+    ("hl", "ha"): 165,
+    ("ha", "qni"): 1070,
+    ("qni", "ha"): 1070,
+    ("hcm", "dn"): 964,
+    ("dn", "hcm"): 964,
+    ("hcm", "hue"): 1045,
+    ("hue", "hcm"): 1045,
+    ("hcm", "hoian"): 970,
+    ("hoian", "hcm"): 970,
+    ("hcm", "nt"): 448,
+    ("nt", "hcm"): 448,
+    ("hcm", "dl"): 308,
+    ("dl", "hcm"): 308,
+    ("hcm", "ph"): 460,
+    ("ph", "hcm"): 460,
+    ("hcm", "qni"): 690,
+    ("qni", "hcm"): 690,
+    ("dn", "hue"): 100,
+    ("hue", "dn"): 100,
+    ("dn", "hoian"): 30,
+    ("hoian", "dn"): 30,
+    ("dn", "nt"): 534,
+    ("nt", "dn"): 534,
+    ("dn", "dl"): 420,
+    ("dl", "dn"): 420,
+}
+
+# Minimum budget per person for each transport type (VND, one-way)
+TRANSPORT_MIN_PER_PAX = {
+    "Máy bay": 700_000,
+    "Tàu hỏa": 200_000,
+    "Xe khách": 150_000,
+    "Ô tô riêng": 0,  # fuel cost, variable
+    "Thuê ô tô tự lái": 400_000,
+    "Xe máy": 0,
+}
+
+# Suggested minimum budget per night per room for accommodation types
+ACCOMMODATION_MIN_PER_NIGHT = {
+    "Resort": 1_200_000,
+    "Villa": 1_500_000,
+    "Khách sạn": 400_000,
+    "Homestay": 250_000,
+    "Airbnb": 350_000,
+    "Căn hộ": 300_000,
+}
+
+
+def validate_transport(city_id, dep_city_id, transport, days, pax, budget):
+    """Return list of error strings related to transport/budget feasibility."""
+    errors = []
+
+    distance = CITY_DISTANCES.get((dep_city_id, city_id)) if dep_city_id else None
+
+    if transport == "Xe đạp":
+        errors.append(
+            "Xe đạp không phù hợp cho các chuyến du lịch liên tỉnh. Vui lòng chọn phương tiện khác."
+        )
+        return errors
+
+    if distance is not None and distance > 0:
+        if transport == "Xe máy":
+            if distance > 800:
+                errors.append(
+                    f"Xe máy không phù hợp cho quãng đường {distance} km. Hãy chọn xe khách, tàu hỏa hoặc máy bay."
+                )
+            elif distance > 500:
+                errors.append(
+                    f"⚠️ Quãng đường {distance} km bằng xe máy rất vất vả và nguy hiểm. Cân nhắc phương tiện khác."
+                )
+
+        if transport == "Xe khách" and distance > 800:
+            errors.append(
+                f"⚠️ Xe khách cho {distance} km sẽ mất 15–20 tiếng. Hãy cân nhắc tàu hỏa hoặc máy bay."
+            )
+
+        if transport in ("Ô tô riêng", "Thuê ô tô tự lái"):
+            if distance >= 1500:
+                errors.append(
+                    f"❌ Quãng đường {distance} km bằng ô tô cần ít nhất 3–4 ngày (hiện tại: {days} ngày). Đề xuất chọn máy bay."
+                )
+            elif distance > 700 and days <= 1:
+                errors.append(
+                    f"⚠️ Lái xe {distance} km mất 8–12 tiếng, không khả thi trong {days} ngày. Cân nhắc máy bay hoặc tàu."
+                )
+
+        if transport == "Máy bay":
+            min_flight = pax * TRANSPORT_MIN_PER_PAX["Máy bay"] * 2  # round-trip
+            if budget < min_flight:
+                errors.append(
+                    f"💰 Ngân sách quá thấp cho vé máy bay khứ hồi. Cần tối thiểu ~{min_flight:,} ₫ cho {pax} người. (Hiện tại: {budget:,} ₫)"
+                )
+
+        # Check rental car extra cost
+        if transport == "Thuê ô tô tự lái":
+            rental_cost = 500_000 * days  # 500k per day
+            if budget < rental_cost:
+                errors.append(
+                    f"💰 Ngân sách không đủ cho thuê xe tự lái {days} ngày (tối thiểu {rental_cost:,} ₫). Hãy chọn phương tiện khác hoặc tăng ngân sách."
+                )
+
+    return errors
+
+
+def validate_accommodation(accommodation, budget, pax, days):
+    """Check if budget is enough for the chosen accommodation type."""
+    if not accommodation or not budget or not pax or not days:
+        return []
+    errors = []
+    min_per_night = ACCOMMODATION_MIN_PER_NIGHT.get(accommodation, 200_000)
+    # Assuming 1 room for 2 pax, otherwise need more rooms
+    rooms_needed = (pax + 1) // 2
+    total_min_accommodation = min_per_night * rooms_needed * days
+    if budget < total_min_accommodation:
+        errors.append(
+            f"💰 Ngân sách không đủ cho loại hình {accommodation} với {pax} người trong {days} ngày. Cần tối thiểu ~{total_min_accommodation:,} ₫ cho chỗ ở (giả sử {rooms_needed} phòng)."
+        )
+    return errors
+
 
 @app.route("/")
 def index():
@@ -204,6 +341,7 @@ def api_places():
 def api_generate():
     data = request.get_json() or {}
     city_id = data.get("city_id")
+    dep_city_id = data.get("dep_city_id")
     budget = data.get("budget", 0)
     pax = data.get("pax", 1)
     date_start = data.get("date_start", "")
@@ -216,42 +354,60 @@ def api_generate():
     errors = []
 
     if not city_id:
-        errors.append("Chưa chọn thành phố")
+        errors.append("📍 Chưa chọn thành phố muốn đến.")
 
     if budget < 10000:
-        errors.append("Ngân sách tối thiểu 10.000 ₫")
+        errors.append("💰 Ngân sách tối thiểu 10.000 ₫.")
 
+    days = 1
     if date_start and date_end:
         try:
             ds = datetime.strptime(date_start, "%Y-%m-%d")
             de = datetime.strptime(date_end, "%Y-%m-%d")
             diff = (de - ds).days
+            days = max(diff, 1)
             if diff > 30:
                 errors.append(
-                    f"Khoảng thời gian vượt quá 30 ngày (hiện tại: {diff} ngày)"
+                    f"📅 Khoảng thời gian vượt quá 30 ngày (hiện tại: {diff} ngày)."
                 )
             if de <= ds:
-                errors.append("Ngày kết thúc phải sau ngày bắt đầu")
+                errors.append("📅 Ngày kết thúc phải sau ngày bắt đầu.")
         except ValueError:
-            errors.append("Định dạng ngày không hợp lệ")
+            errors.append("📅 Định dạng ngày không hợp lệ.")
 
+    # Minimum budget per person/day (food, activities, local transport)
     if not errors and pax and budget and date_start and date_end:
         try:
-            ds = datetime.strptime(date_start, "%Y-%m-%d")
-            de = datetime.strptime(date_end, "%Y-%m-%d")
-            days = max((de - ds).days, 1)
-            min_budget = pax * days * 200000
+            min_budget = pax * days * 200_000
             if budget < min_budget:
                 errors.append(
-                    f"Ngân sách quá thấp (~{min_budget:,} ₫ tối thiểu cho {pax} người × {days} ngày)"
+                    f"💰 Ngân sách quá thấp. Tối thiểu ~{min_budget:,} ₫ cho {pax} người × {days} ngày (200.000 ₫/người/ngày)."
                 )
         except Exception:
             pass
 
+    # Transport feasibility
+    if transport and city_id and not errors:
+        transport_errors = validate_transport(
+            city_id, dep_city_id, transport, days, pax, budget
+        )
+        hard = [e for e in transport_errors if e.startswith("❌")]
+        soft = [e for e in transport_errors if not e.startswith("❌")]
+        errors.extend(hard)
+        if errors:
+            return jsonify({"status": "error", "errors": errors})
+        if soft:
+            return jsonify({"status": "warning", "warnings": soft})
+
+    # Accommodation budget check
+    if accommodation and not errors:
+        acc_errors = validate_accommodation(accommodation, budget, pax, days)
+        if acc_errors:
+            errors.extend(acc_errors)
+
     if errors:
         return jsonify({"status": "error", "errors": errors})
 
-    # Mock success
     return jsonify({"status": "success"})
 
 
@@ -271,9 +427,9 @@ def api_feedback():
     data = request.get_json() or {}
     feedback = data.get("feedback", "").strip()
     if not feedback:
-        return jsonify({"status": "error", "message": "Feedback trống"})
+        return jsonify({"status": "error", "message": "Phản hồi trống."})
     if len(feedback) > 500:
-        return jsonify({"status": "error", "message": "Feedback tối đa 500 ký tự"})
+        return jsonify({"status": "error", "message": "Phản hồi tối đa 500 ký tự."})
     return jsonify({"status": "success"})
 
 

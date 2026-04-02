@@ -2019,17 +2019,19 @@ body {
   color: var(--muted);
 }
 
-/* ========== FULL-WIDTH ADS (stacked after footer) ========== */
+/* ========== ADS (full width, margin 0, no border-radius, reduced blur) ========== */
 .fullwidth-ad {
   position: relative;
   width: 100%;
-  height: 320px;
+  margin: 0;
+  height: 256px;        /* giữ nguyên chiều cao */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   cursor: pointer;
   transition: transform 0.3s, box-shadow 0.3s;
   overflow: hidden;
+  box-shadow: var(--sh-m);
 }
 .fullwidth-ad:hover {
   transform: scale(1.01);
@@ -2038,8 +2040,8 @@ body {
 .ad-overlay-full {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(0,169,255,0.85), rgba(0,169,255,0.6), rgba(137,207,243,0.4));
-  backdrop-filter: blur(4px);
+  background: linear-gradient(135deg, rgba(0,169,255,0.95), rgba(0,169,255,0.8), rgba(137,207,243,0.6));
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2103,7 +2105,7 @@ body {
   .hotel-img-inline { margin-bottom: 8px; }
   .card-items-grid { grid-template-columns: 1fr; }
   .message { max-width: 90%; }
-  .fullwidth-ad { height: 280px; }
+  .fullwidth-ad { height: 220px; width: 92%; }
   .ad-content h3 { font-size: 24px; }
   .ad-content p { font-size: 14px; }
   .chatbot-container-full-width { width: 95%; }
@@ -2115,8 +2117,310 @@ body {
   .stop-card { grid-template-columns: 85px 1fr; }
   .user-details { display: none; }
   .user-avatar { width: 32px; height: 32px; font-size: 20px; }
-  .fullwidth-ad { height: 240px; }
+  .fullwidth-ad { height: 180px; width: 96%; }
   .ad-content h3 { font-size: 20px; }
   .ad-content p { font-size: 12px; }
   .chatbot-container-full-width { width: 98%; margin: 10px auto; }
 }
+/* ========== TRANSPORT HINT (inline below transport select) ========== */
+.transport-hint {
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 5px;
+  padding: 4px 10px;
+  border-radius: var(--r-s);
+  display: block;
+  min-height: 20px;
+  transition: all var(--t);
+}
+.transport-hint.ok    { color: var(--success); background: rgba(46,125,100,0.08); }
+.transport-hint.warn  { color: #B45309;        background: rgba(180,83,9,0.08);   }
+.transport-hint.error { color: var(--error);   background: var(--error-bg);       }
+.transport-hint.info  { color: var(--p1);      background: rgba(0,169,255,0.08);  }
+
+/* ========== LEAFLET MAP OVERRIDES ========== */
+#leaflet-map {
+  height: 320px;
+  width: 100%;
+  border-radius: 0 0 var(--r-l) var(--r-l);
+  z-index: 1;
+}
+#leaflet-map .leaflet-control-attribution {
+  font-size: 9px;
+  background: rgba(255,255,255,0.7);
+}
+
+/* ========== HOTELS SECTION (separate from day blocks) ========== */
+.hotels-section {
+  margin-top: 24px;
+  padding: 24px;
+  background: rgba(255,255,255,0.78);
+  backdrop-filter: blur(20px);
+  border-radius: var(--r-l);
+  box-shadow: var(--sh-m);
+  border: 1px solid rgba(255,255,255,0.4);
+}
+.hotels-sec-hd {
+  margin-bottom: 20px;
+}
+.hotels-sec-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.hotels-sec-sub {
+  font-size: 13px;
+  color: var(--muted);
+}
+.hotels-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+@media (max-width: 900px) { .hotels-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .hotels-grid { grid-template-columns: 1fr; } }
+
+.hotel-c-card {
+  background: rgba(255,255,255,0.7);
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: var(--r-l);
+  overflow: hidden;
+  transition: transform var(--t), box-shadow var(--t);
+  position: relative;
+}
+.hotel-c-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--sh-l);
+}
+.hotel-c-card.recommended {
+  border-color: rgba(0,169,255,0.35);
+  box-shadow: 0 0 0 2px rgba(0,169,255,0.2), var(--sh-m);
+}
+.hotel-c-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: linear-gradient(90deg, var(--p1), var(--p2));
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(0,169,255,0.35);
+  white-space: nowrap;
+}
+.hotel-c-badge.green  { background: linear-gradient(90deg, #2E7D64, #0C9E72); }
+.hotel-c-badge.orange { background: linear-gradient(90deg, #E67E22, #F39C12); }
+.hotel-c-photo {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+  background: linear-gradient(135deg, var(--p2), var(--a1));
+}
+.hotel-c-body {
+  padding: 14px;
+}
+.hotel-c-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.hotel-c-stars { font-size: 13px; margin-bottom: 4px; }
+.hotel-c-addr  { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.hotel-c-price {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--p1);
+  margin-bottom: 10px;
+}
+.hotel-c-price span { font-size: 11px; font-weight: 400; color: var(--muted); }
+
+/* Comparison bars */
+.hotel-c-compare { margin-bottom: 10px; }
+.hc-row {
+  display: grid;
+  grid-template-columns: 80px 1fr 50px;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.hc-bar {
+  background: rgba(0,169,255,0.1);
+  border-radius: 4px;
+  height: 6px;
+  overflow: hidden;
+}
+.hc-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--p1), var(--p2));
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+.hc-val { font-weight: 600; color: var(--text); text-align: right; font-size: 11px; }
+
+.hotel-c-amenities {
+  font-size: 11.5px;
+  color: var(--text);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.hotel-c-book {
+  width: 100%;
+  background: linear-gradient(90deg, var(--p1), var(--p2));
+  border: none;
+  border-radius: var(--r-s);
+  padding: 9px;
+  color: #fff;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--t);
+}
+.hotel-c-book:hover {
+  background: linear-gradient(90deg, var(--p2), var(--p1));
+  transform: translateY(-1px);
+  box-shadow: var(--glow);
+}
+.hotel-c-book:active { transform: translateY(0); }
+
+/* ========== CHATBOT: BOT AVATAR & TYPING INDICATOR ========== */
+.message-wrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+.message-wrap.user { flex-direction: row-reverse; }
+.bot-avatar {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--p1), var(--p2));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,169,255,0.3);
+  border: 2px solid #fff;
+}
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 18px;
+  background: rgba(255,255,255,0.8);
+  border-radius: 24px 24px 24px 4px;
+  box-shadow: var(--sh);
+  width: fit-content;
+}
+.typing-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--p1);
+  border-radius: 50%;
+  animation: typingBounce 1.2s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30%            { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Quick-reply suggestion chips in chatbot */
+.chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 4px 40px;
+}
+.chat-chip {
+  background: rgba(0,169,255,0.1);
+  border: 1px solid rgba(0,169,255,0.3);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--p1);
+  cursor: pointer;
+  transition: all var(--t);
+}
+.chat-chip:hover {
+  background: rgba(0,169,255,0.2);
+  transform: translateY(-1px);
+}
+
+/* Bot message with icon prefix */
+.bot-msg-icon {
+  display: inline-block;
+  margin-right: 6px;
+  font-style: normal;
+}
+.bot-section-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--p1);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.weather-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+.weather-day {
+  background: rgba(0,169,255,0.08);
+  border-radius: var(--r-s);
+  padding: 8px;
+  text-align: center;
+  font-size: 11.5px;
+}
+.weather-day .wd-icon  { font-size: 22px; display: block; margin-bottom: 3px; }
+.weather-day .wd-label { font-weight: 600; color: var(--text); }
+.weather-day .wd-temp  { color: var(--muted); }
+.budget-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin-top: 8px;
+}
+.budget-table th {
+  text-align: left;
+  padding: 6px 8px;
+  background: rgba(0,169,255,0.08);
+  font-weight: 700;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.budget-table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+.budget-table tr:last-child td { border-bottom: none; font-weight: 700; color: var(--p1); }
+.food-item {
+  display: flex;
+  gap: 10px;
+  padding: 8px;
+  background: rgba(255,255,255,0.6);
+  border-radius: var(--r-s);
+  margin-bottom: 6px;
+}
+.food-emoji { font-size: 28px; flex-shrink: 0; }
+.food-info  { flex: 1; }
+.food-name  { font-weight: 700; font-size: 14px; color: var(--text); }
+.food-desc  { font-size: 12px; color: var(--muted); }
+.food-price { font-size: 12px; color: var(--p1); font-weight: 600; margin-top: 2px; }
+
+/* ========== TRANSPORT WARNING POPUP ========== */
+#popup-transport-warn .error-issues { margin-bottom: 16px; }

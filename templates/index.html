@@ -2,7 +2,15 @@
 
 {% block title %}TopGo.AI — Smart Tourism Planner{% endblock %}
 
+{% block extra_head %}
+<!-- Leaflet CSS for real interactive map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+{% endblock %}
+
 {% block content %}
+<!-- ============================================================
+     SCREEN 1: INPUT FORM
+============================================================ -->
 <div class="screen active" id="screen-form">
     <section class="hero">
         <svg class="flight-path-svg" viewBox="0 0 1200 40" preserveAspectRatio="none" fill="none"
@@ -13,11 +21,12 @@
         <div class="hero-plane"></div>
         <div class="hero-eyebrow"><span class="hero-dot"></span> AI Itinerary Planner · Powered by TopGo.AI</div>
         <h1>Lên lịch trình <em>hoàn hảo</em><br>trong tích tắc ✦</h1>
-        <p class="hero-sub">Điền thông tin, AI sẽ tạo lịch trình tối ưu, gợi ý phương tiện và chi phí phù hợp nhất cho
-            chuyến đi của bạn.</p>
+        <p class="hero-sub">Điền thông tin, AI sẽ tạo lịch trình tối ưu, gợi ý phương tiện và chi phí phù hợp nhất.</p>
     </section>
+
     <div class="form-wrapper">
         <div class="ticket-card glass-card">
+            <!-- Boarding pass bar -->
             <div class="ticket-bar">
                 <div class="tb-brand">
                     <svg width="26" height="26" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
@@ -32,8 +41,11 @@
                 <div class="tb-label">BOARDING PASS · AI ITINERARY</div>
                 <div class="tb-trip" id="tb-trip-id">TRIP — AI·GEN·2026</div>
             </div>
+
+            <!-- Ticket body -->
             <div class="ticket-body">
                 <div class="ticket-main">
+                    <!-- Boarding pass display (live updates as user types) -->
                     <div class="from-to">
                         <div class="ft-block">
                             <span class="ft-label">Xuất phát từ</span>
@@ -42,7 +54,7 @@
                         </div>
                         <div class="ft-middle">
                             <div class="ft-plane-icon">
-                                <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
                                     <path
                                         d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
                                 </svg>
@@ -55,11 +67,14 @@
                             <div class="ft-city-sub" id="ft-to-sub">Chọn thành phố bên dưới</div>
                         </div>
                     </div>
+
+                    <!-- Departure input (auto-updates boarding pass) -->
                     <div class="field-group">
                         <label class="label-sm">Địa điểm xuất phát</label>
                         <div class="input-wrap">
                             <input class="text-input" id="dep-input" type="text"
-                                placeholder="Mặc định là điểm đến đầu tiên..." list="dep-suggestions">
+                                placeholder="Mặc định là điểm đến đầu tiên..." list="dep-suggestions"
+                                autocomplete="off">
                             <datalist id="dep-suggestions">
                                 <option value="Sân bay Nội Bài, Hà Nội">
                                 <option value="Ga Hà Nội">
@@ -68,9 +83,13 @@
                                 <option value="Bến xe Miền Đông, TP.HCM">
                                 <option value="Ga Sài Gòn">
                                 <option value="Sân bay Phú Bài, Huế">
+                                <option value="Sân bay Cam Ranh, Nha Trang">
+                                <option value="Sân bay Liên Khương, Đà Lạt">
                             </datalist>
                         </div>
                     </div>
+
+                    <!-- City selector -->
                     <div class="field-group">
                         <label class="label-sm">Thành phố muốn đến <span
                                 style="color:var(--error);margin-left:3px">*</span></label>
@@ -85,6 +104,8 @@
                         </div>
                         <div class="f-err" id="err-city">Vui lòng chọn 1 thành phố</div>
                     </div>
+
+                    <!-- Specific places -->
                     <div class="field-group">
                         <label class="label-sm">Các điểm tham quan cụ thể</label>
                         <div class="dd-wrap" id="dd-place">
@@ -97,12 +118,16 @@
                             <div class="dd-list" id="place-list"></div>
                         </div>
                     </div>
-                </div>
+                </div><!-- /ticket-main -->
+
                 <div class="ticket-perf">
                     <div class="perf-notch-top"></div>
                     <div class="perf-notch-bot"></div>
                 </div>
+
+                <!-- Ticket stub: options -->
                 <div class="ticket-stub">
+                    <!-- Pax -->
                     <div class="stub-field">
                         <span class="stub-label">Số hành khách <span style="color:var(--error)">*</span></span>
                         <div class="stepper">
@@ -112,6 +137,8 @@
                         </div>
                         <div class="f-err" id="err-pax" style="margin-top:5px">Từ 1 đến 50 người</div>
                     </div>
+
+                    <!-- Dates -->
                     <div class="stub-field">
                         <span class="stub-label">Ngày khởi hành <span style="color:var(--error)">*</span></span>
                         <input class="stub-date" id="date-start" type="date" onchange="validateDates()">
@@ -131,18 +158,23 @@
                         <span class="stub-label">Giờ kết thúc (dự kiến)</span>
                         <input class="stub-date" id="time-end" type="time" value="18:00">
                     </div>
+
+                    <!-- Transport — xe đạp removed (not feasible for inter-city travel) -->
                     <div class="stub-field">
                         <span class="stub-label">Loại hình phương tiện</span>
-                        <select class="stub-date" id="transport-type">
+                        <select class="stub-date" id="transport-type" onchange="updateTransportHint()">
                             <option value="Xe khách">Xe khách</option>
                             <option value="Máy bay">Máy bay</option>
                             <option value="Tàu hỏa">Tàu hỏa</option>
                             <option value="Ô tô riêng">Ô tô riêng</option>
                             <option value="Xe máy">Xe máy</option>
-                            <option value="Xe đạp">Xe đạp</option>
                             <option value="Thuê ô tô tự lái">Thuê ô tô tự lái</option>
                         </select>
+                        <!-- Live transport feasibility hint -->
+                        <span class="transport-hint" id="transport-hint"></span>
                     </div>
+
+                    <!-- Accommodation -->
                     <div class="stub-field">
                         <span class="stub-label">Loại hình chỗ ở</span>
                         <select class="stub-date" id="accommodation-type">
@@ -154,6 +186,8 @@
                             <option value="Căn hộ">Căn hộ</option>
                         </select>
                     </div>
+
+                    <!-- Budget -->
                     <div class="stub-field">
                         <span class="stub-label">Ngân sách tổng <span style="color:var(--error)">*</span></span>
                         <div class="budget-wrap">
@@ -172,42 +206,50 @@
                         <div class="budget-pp" id="budget-pp"></div>
                         <div class="f-err" id="err-budget">Tối thiểu 100.000 ₫</div>
                     </div>
-                </div>
-            </div>
+                </div><!-- /ticket-stub -->
+            </div><!-- /ticket-body -->
+
+            <!-- Preferences & notes -->
             <div class="ticket-bottom">
                 <div class="section-head">Sở thích &amp; phong cách du lịch</div>
                 <div class="pref-chips" id="pref-chips">
-                    <button class="p-chip" onclick="togglePref(this,'Ẩm thực địa phương')">Ẩm thực địa phương</button>
-                    <button class="p-chip" onclick="togglePref(this,'Di tích lịch sử')">Di tích lịch sử</button>
-                    <button class="p-chip" onclick="togglePref(this,'Thiên nhiên &amp; leo núi')">Thiên nhiên &amp; leo
-                        núi</button>
-                    <button class="p-chip" onclick="togglePref(this,'Mua sắm')">Mua sắm</button>
-                    <button class="p-chip" onclick="togglePref(this,'Check-in &amp; chụp ảnh')">Check-in đẹp</button>
-                    <button class="p-chip" onclick="togglePref(this,'Nghệ thuật &amp; văn hóa')">Nghệ thuật &amp; văn
+                    <button class="p-chip" onclick="togglePref(this,'Ẩm thực địa phương')">🍜 Ẩm thực địa
+                        phương</button>
+                    <button class="p-chip" onclick="togglePref(this,'Di tích lịch sử')">🏛 Di tích lịch sử</button>
+                    <button class="p-chip" onclick="togglePref(this,'Thiên nhiên &amp; leo núi')">🌿 Thiên nhiên &amp;
+                        leo núi</button>
+                    <button class="p-chip" onclick="togglePref(this,'Mua sắm')">🛍 Mua sắm</button>
+                    <button class="p-chip" onclick="togglePref(this,'Check-in &amp; chụp ảnh')">📸 Check-in đẹp</button>
+                    <button class="p-chip" onclick="togglePref(this,'Nghệ thuật &amp; văn hóa')">🎨 Nghệ thuật &amp; văn
                         hóa</button>
-                    <button class="p-chip" onclick="togglePref(this,'Biển &amp; bơi lội')">Biển &amp; bơi lội</button>
-                    <button class="p-chip" onclick="togglePref(this,'Spa &amp; nghỉ dưỡng')">Spa &amp; nghỉ
+                    <button class="p-chip" onclick="togglePref(this,'Biển &amp; bơi lội')">🏊 Biển &amp; bơi
+                        lội</button>
+                    <button class="p-chip" onclick="togglePref(this,'Spa &amp; nghỉ dưỡng')">🧖 Spa &amp; nghỉ
                         dưỡng</button>
-                    <button class="p-chip" onclick="togglePref(this,'Phù hợp gia đình')">Gia đình &amp; trẻ em</button>
-                    <button class="p-chip" onclick="togglePref(this,'Thuê xe tự lái')">Thuê xe tự lái</button>
+                    <button class="p-chip" onclick="togglePref(this,'Phù hợp gia đình')">👨‍👩‍👧 Gia đình &amp; trẻ
+                        em</button>
+                    <button class="p-chip" onclick="togglePref(this,'Thuê xe tự lái')">🚗 Thuê xe tự lái</button>
                 </div>
                 <div class="section-head">Ghi chú thêm cho AI</div>
                 <textarea class="notes-area" id="notes-input"
-                    placeholder="Ví dụ: Có trẻ nhỏ 5 tuổi, không đi xa được, thích ngủ nướng buổi sáng, dị ứng hải sản, muốn có lịch trình không quá dày..."
+                    placeholder="Ví dụ: Có trẻ nhỏ 5 tuổi, không đi xa được, thích ngủ nướng buổi sáng, dị ứng hải sản..."
                     maxlength="500" oninput="updateCharCount(this,'notes-count')"></textarea>
                 <div class="notes-foot"><span class="char-c" id="notes-count">0 / 500</span></div>
             </div>
+
             <div class="ticket-actions">
                 <button class="btn-reset" onclick="showPopup('popup-reset')">Điền lại</button>
                 <button class="btn-gen" id="btn-gen" onclick="handleGenerate()">
-                    Tạo lịch trình với AI
-                    <span class="plane-tail">✈</span>
+                    Tạo lịch trình với AI <span class="plane-tail">✈</span>
                 </button>
             </div>
-        </div>
+        </div><!-- /ticket-card -->
     </div>
-</div>
+</div><!-- /screen-form -->
 
+<!-- ============================================================
+     SCREEN 2: LOADING
+============================================================ -->
 <div class="screen" id="screen-loading">
     <div class="loading-wrap">
         <div class="loading-plane"></div>
@@ -230,8 +272,12 @@
     </div>
 </div>
 
+<!-- ============================================================
+     SCREEN 3: RESULT
+============================================================ -->
 <div class="screen" id="screen-result">
     <div class="result-wrap">
+        <!-- Header summary -->
         <div class="result-header glass-card">
             <div style="flex:1;min-width:200px">
                 <div class="result-title">Hành trình Đà Nẵng · Hội An · Bà Nà Hills</div>
@@ -248,60 +294,48 @@
                 <button class="r-btn r-btn-solid" onclick="handleSave()">Lưu lịch trình</button>
             </div>
         </div>
+
+        <!-- Map + Itinerary grid -->
         <div class="result-grid">
+            <!-- Left: interactive Leaflet map -->
             <div>
                 <div class="map-panel glass-card">
-                    <div class="map-hd">Sơ đồ hành trình</div>
-                    <div class="map-sim">
-                        <div class="map-road" style="left:12%;top:42%;width:76%;height:3px;transform:rotate(-4deg)">
-                        </div>
-                        <div class="map-pin" style="left:26%;top:26%">
-                            <div class="m-bubble" style="background:var(--p1)">Khách sạn</div>
-                            <div class="m-tail" style="border-top:7px solid var(--p1)"></div>
-                        </div>
-                        <div class="map-pin" style="left:56%;top:33%">
-                            <div class="m-bubble" style="background:var(--success)">Bãi Mỹ Khê</div>
-                            <div class="m-tail" style="border-top:7px solid var(--success)"></div>
-                        </div>
-                        <div class="map-pin" style="left:72%;top:56%">
-                            <div class="m-bubble" style="background:#7B4FBE">Cầu Vàng</div>
-                            <div class="m-tail" style="border-top:7px solid #7B4FBE"></div>
-                        </div>
-                        <div class="map-pin" style="left:31%;top:70%">
-                            <div class="m-bubble" style="background:var(--gold)">Phố Cổ Hội An</div>
-                            <div class="m-tail" style="border-top:7px solid var(--gold)"></div>
-                        </div>
-                    </div>
-                    <div class="map-legend">
-                        <div class="map-leg-item">
-                            <div class="map-leg-dot" style="background:var(--p1)"></div>Khách sạn &amp; lưu trú
-                        </div>
-                        <div class="map-leg-item">
-                            <div class="map-leg-dot" style="background:var(--success)"></div>Địa điểm tham quan
-                        </div>
-                        <div class="map-leg-item">
-                            <div class="map-leg-dot" style="background:var(--gold)"></div>Ẩm thực &amp; văn hóa
-                        </div>
-                    </div>
+                    <div class="map-hd">Sơ đồ hành trình (live map)</div>
+                    <!-- Real Leaflet map replaces the old static simulation -->
+                    <div id="leaflet-map"></div>
                     <div class="map-stats">
-                        <div class="map-stat"><span class="lbl">Tổng quãng đường</span><span class="val">~148 km</span>
+                        <div class="map-stat">
+                            <span class="lbl">Tổng quãng đường</span>
+                            <span class="val">~148 km</span>
                         </div>
-                        <div class="map-stat"><span class="lbl">Số địa điểm</span><span class="val">11 điểm</span></div>
-                        <div class="map-stat"><span class="lbl">Chi phí ước tính</span><span class="val"
-                                style="color:var(--p1)">8.200.000 ₫</span></div>
-                        <div class="map-stat"><span class="lbl">Chi phí / người</span><span class="val"
-                                style="color:var(--p2)">2.050.000 ₫</span></div>
+                        <div class="map-stat">
+                            <span class="lbl">Số địa điểm</span>
+                            <span class="val">11 điểm</span>
+                        </div>
+                        <div class="map-stat">
+                            <span class="lbl">Chi phí ước tính</span>
+                            <span class="val" style="color:var(--p1)">8.200.000 ₫</span>
+                        </div>
+                        <div class="map-stat">
+                            <span class="lbl">Chi phí / người</span>
+                            <span class="val" style="color:var(--p2)">2.050.000 ₫</span>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Right: day-by-day itinerary (hotels removed from here) -->
             <div class="itinerary">
                 <!-- Day 1 -->
                 <div class="day-block glass-card">
                     <div class="day-hd">
                         <div class="day-badge">NGÀY 1</div>
                         <div class="day-title">Thứ Tư · 25/06/2025 — Đà Nẵng</div>
-                        <div class="day-stats"><span class="day-st">4 điểm</span><span class="day-st">~9
-                                tiếng</span><span class="day-st">~1.8M ₫</span></div>
+                        <div class="day-stats">
+                            <span class="day-st">4 điểm</span>
+                            <span class="day-st">~9 tiếng</span>
+                            <span class="day-st">~1.8M ₫</span>
+                        </div>
                     </div>
                     <div class="stop-card">
                         <div class="stop-tl">
@@ -389,27 +423,18 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Hotel for Day 1 -->
-                    <div class="hotel-card-inline">
-                        <div class="hotel-img-inline">🏨</div>
-                        <div class="hotel-info-inline">
-                            <div class="hotel-name-inline">Pulchra Resort Đà Nẵng</div>
-                            <div class="hotel-address-inline">📍 Sơn Trà, Đà Nẵng</div>
-                            <div class="hotel-rating-inline">⭐ 4.8 · (1,234 đánh giá)</div>
-                            <div class="hotel-price-inline">💰 Từ 1.850.000 ₫/đêm</div>
-                            <div class="hotel-distance-inline">🚗 Cách trung tâm 2.5km · Cách bãi biển 500m</div>
-                            <div class="hotel-amenities-inline">🏊 Hồ bơi vô cực · 🍳 Ăn sáng · 🚗 Đỗ xe miễn phí</div>
-                            <div class="hotel-score-inline">🔝 Độ phù hợp: 9.2/10</div>
-                        </div>
-                    </div>
-                </div>
+                </div><!-- /day-1 -->
+
                 <!-- Day 2 -->
                 <div class="day-block glass-card">
                     <div class="day-hd">
                         <div class="day-badge">NGÀY 2</div>
                         <div class="day-title">Thứ Năm · 26/06/2025 — Bà Nà Hills</div>
-                        <div class="day-stats"><span class="day-st">2 điểm</span><span class="day-st">~10
-                                tiếng</span><span class="day-st">~3.2M ₫</span></div>
+                        <div class="day-stats">
+                            <span class="day-st">2 điểm</span>
+                            <span class="day-st">~10 tiếng</span>
+                            <span class="day-st">~3.2M ₫</span>
+                        </div>
                     </div>
                     <div class="stop-card">
                         <div class="stop-tl">
@@ -432,27 +457,18 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Hotel for Day 2 -->
-                    <div class="hotel-card-inline">
-                        <div class="hotel-img-inline">🏨</div>
-                        <div class="hotel-info-inline">
-                            <div class="hotel-name-inline">Fusion Suites Đà Nẵng</div>
-                            <div class="hotel-address-inline">📍 Phạm Văn Đồng, Đà Nẵng</div>
-                            <div class="hotel-rating-inline">⭐ 4.6 · (892 đánh giá)</div>
-                            <div class="hotel-price-inline">💰 Từ 1.250.000 ₫/đêm</div>
-                            <div class="hotel-distance-inline">🚗 Cách trung tâm 1km · Cách bãi biển 200m</div>
-                            <div class="hotel-amenities-inline">🧘 Spa · 🥗 Nhà hàng · 🍸 Rooftop bar</div>
-                            <div class="hotel-score-inline">🔝 Độ phù hợp: 8.9/10</div>
-                        </div>
-                    </div>
-                </div>
+                </div><!-- /day-2 -->
+
                 <!-- Day 3 -->
                 <div class="day-block glass-card">
                     <div class="day-hd">
                         <div class="day-badge">NGÀY 3</div>
                         <div class="day-title">Thứ Sáu · 27/06/2025 — Hội An</div>
-                        <div class="day-stats"><span class="day-st">3 điểm</span><span class="day-st">~8
-                                tiếng</span><span class="day-st">~1.5M ₫</span></div>
+                        <div class="day-stats">
+                            <span class="day-st">3 điểm</span>
+                            <span class="day-st">~8 tiếng</span>
+                            <span class="day-st">~1.5M ₫</span>
+                        </div>
                     </div>
                     <div class="stop-card">
                         <div class="stop-tl">
@@ -516,36 +532,161 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Hotel for Day 3 -->
-                    <div class="hotel-card-inline">
-                        <div class="hotel-img-inline">🏨</div>
-                        <div class="hotel-info-inline">
-                            <div class="hotel-name-inline">Monarque Hotel Đà Nẵng</div>
-                            <div class="hotel-address-inline">📍 Nguyễn Văn Thoại, Đà Nẵng</div>
-                            <div class="hotel-rating-inline">⭐ 4.5 · (674 đánh giá)</div>
-                            <div class="hotel-price-inline">💰 Từ 980.000 ₫/đêm</div>
-                            <div class="hotel-distance-inline">🚗 Cách trung tâm 1.8km · Cách bãi biển 300m</div>
-                            <div class="hotel-amenities-inline">🏋️ Gym · 🍜 Nhà hàng Việt · 🚌 Dịch vụ đưa đón</div>
-                            <div class="hotel-score-inline">🔝 Độ phù hợp: 8.5/10</div>
-                        </div>
-                    </div>
-                </div>
+                </div><!-- /day-3 -->
 
+                <!-- ====================================================
+             HOTEL COMPARISON SECTION (standalone, not per-day)
+        ==================================================== -->
+                <div class="hotels-section">
+                    <div class="hotels-sec-hd">
+                        <div class="hotels-sec-title">Top 3 Chỗ ở Phù Hợp Nhất</div>
+                        <div class="hotels-sec-sub">Gợi ý dựa trên tiêu chí: 4 người · Khách sạn · ~2.050.000 ₫/người ·
+                            Gần trung tâm &amp; biển</div>
+                    </div>
+                    <div class="hotels-grid">
+
+                        <!-- Hotel 1: Best match -->
+                        <div class="hotel-c-card recommended">
+                            <div class="hotel-c-badge">🥇 Phù hợp nhất</div>
+                            <img class="hotel-c-photo"
+                                src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80"
+                                onerror="this.src='https://picsum.photos/seed/hotel-dn1/400/140'"
+                                alt="Pulchra Resort Đà Nẵng">
+                            <div class="hotel-c-body">
+                                <div class="hotel-c-name">Pulchra Resort Đà Nẵng</div>
+                                <div class="hotel-c-stars">⭐⭐⭐⭐⭐</div>
+                                <div class="hotel-c-addr">📍 Sơn Trà, Đà Nẵng</div>
+                                <div class="hotel-c-price">1.850.000 ₫ <span>/đêm/phòng</span></div>
+                                <div class="hotel-c-compare">
+                                    <div class="hc-row"><span>Giá/đêm</span>
+                                        <div class="hc-bar">
+                                            <div class="hc-fill" style="width:75%"></div>
+                                        </div><span class="hc-val">1.85M</span>
+                                    </div>
+                                    <div class="hc-row"><span>Đánh giá</span>
+                                        <div class="hc-bar">
+                                            <div class="hc-fill" style="width:96%"></div>
+                                        </div><span class="hc-val">4.8 ⭐</span>
+                                    </div>
+                                    <div class="hc-row"><span>Cách Mỹ Khê</span>
+                                        <div class="hc-bar">
+                                            <div class="hc-fill" style="width:80%"></div>
+                                        </div><span class="hc-val">500m</span>
+                                    </div>
+                                    <div class="hc-row"><span>AI Score</span>
+                                        <div class="hc-bar">
+                                            <div class="hc-fill" style="width:92%"></div>
+                                        </div><span class="hc-val">9.2/10</span>
+                                    </div>
+                                </div>
+                                <!-- amenities removed -->
+                                <button class="hotel-c-book" onclick="handleBooking('Pulchra Resort Đà Nẵng')">Kiểm tra
+                                    phòng trống</button>
+                            </div>
+                        </div>
+
+                        <!-- Hotel 2: Best value -->
+                        <div class="hotel-c-card">
+                            <div class="hotel-c-badge green">💎 Tốt nhất tầm giá</div>
+                            <img class="hotel-c-photo"
+                                src="https://images.unsplash.com/photo-1582719508461-905c673771fd?w=400&q=80"
+                                onerror="this.src='https://picsum.photos/seed/hotel-dn2/400/140'"
+                                alt="Fusion Suites Đà Nẵng">
+                            <div class="hotel-c-body">
+                                <div class="hotel-c-name">Fusion Suites Đà Nẵng</div>
+                                <div class="hotel-c-stars">⭐⭐⭐⭐⭐</div>
+                                <div class="hotel-c-addr">📍 Phạm Văn Đồng, Đà Nẵng</div>
+                                <div class="hotel-c-price">1.250.000 ₫ <span>/đêm/phòng</span></div>
+                                <div class="hotel-c-compare">
+                                    <div class="hc-row"><span>Giá/đêm</span>
+                                        <div class="hc-bar">
+                                            <div class="hc-fill" style="width:50%"></div>
+                                        </div><span class="hc-val">1.25M</span>
+                                    </div>
+                                    <div class="hc-row"><span>Đánh giá</span>
+                                        <div class="hc-bar">
+                                            <div class="hc-fill" style="width:92%"></div>
+                                        </div><span class="hc-val">4.6 ⭐</span>
+                                    </div>
+                                    <div class="hc-row"><span>Cách Mỹ Khê</span>
+                                        <div class="hc-bar">
+                                            <div class="hc-fill" style="width:90%"></div>
+                                        </div><span class="hc-val">200m</span>
+                                    </div>
+                                    <div class="hc-row"><span>AI Score</span>
+                                        <div class="hc-bar">
+                                            <div class="hc-fill" style="width:89%"></div>
+                                        </div><span class="hc-val">8.9/10</span>
+                                    </div>
+                                </div>
+                                <!-- amenities removed -->
+                                <button class="hotel-c-book" onclick="handleBooking('Fusion Suites Đà Nẵng')">Kiểm tra
+                                    phòng trống</button>
+                            </div>
+                        </div>
+
+                        <!-- Hotel 3: Budget-friendly -->
+                        <div class="hotel-c-card">
+                            <div class="hotel-c-badge orange">🌟 Tiết kiệm nhất</div>
+                            <img class="hotel-c-photo"
+                                src="https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400&q=80"
+                                onerror="this.src='https://picsum.photos/seed/hotel-dn3/400/140'"
+                                alt="Monarque Hotel Đà Nẵng">
+                            <div class="hotel-c-body">
+                                <div class="hotel-c-name">Monarque Hotel Đà Nẵng</div>
+                                <div class="hotel-c-stars">⭐⭐⭐⭐</div>
+                                <div class="hotel-c-addr">📍 Nguyễn Văn Thoại, Đà Nẵng</div>
+                                <div class="hotel-c-price">980.000 ₫ <span>/đêm/phòng</span></div>
+                                <div class="hotel-c-compare">
+                                    <div class="hc-row"><span>Giá/đêm</span>
+                                        <div class="hc-bar">
+                                            <div class="hc-fill" style="width:38%"></div>
+                                        </div><span class="hc-val">980K</span>
+                                    </div>
+                                    <div class="hc-row"><span>Đánh giá</span>
+                                        <div class="hc-bar">
+                                            <div class="hc-fill" style="width:90%"></div>
+                                        </div><span class="hc-val">4.5 ⭐</span>
+                                    </div>
+                                    <div class="hc-row"><span>Cách trung tâm</span>
+                                        <div class="hc-bar">
+                                            <div class="hc-fill" style="width:72%"></div>
+                                        </div><span class="hc-val">1.8km</span>
+                                    </div>
+                                    <div class="hc-row"><span>AI Score</span>
+                                        <div class="hc-bar">
+                                            <div class="hc-fill" style="width:85%"></div>
+                                        </div><span class="hc-val">8.5/10</span>
+                                    </div>
+                                </div>
+                                <!-- amenities removed -->
+                                <button class="hotel-c-book" onclick="handleBooking('Monarque Hotel Đà Nẵng')">Kiểm tra
+                                    phòng trống</button>
+                            </div>
+                        </div>
+
+                    </div><!-- /hotels-grid -->
+                </div><!-- /hotels-section -->
+
+                <!-- Feedback / adjust itinerary -->
                 <div class="feedback-card glass-card">
                     <div class="feedback-title">Phản hồi cho AI · Điều chỉnh lịch trình</div>
                     <textarea class="feedback-area" id="feedback-input"
-                        placeholder="Ví dụ: Thêm buổi tối xem show ánh sáng, hoặc đổi Bà Nà Hills lấy núi Sơn Trà..."
+                        placeholder="Ví dụ: Thêm buổi tối xem show ánh sáng Cầu Rồng, hoặc đổi Bà Nà Hills lấy núi Sơn Trà..."
                         maxlength="500" oninput="updateCharCount(this,'feedback-count')"></textarea>
                     <div class="feedback-foot">
                         <span class="feedback-lim" id="feedback-count">0 / 500</span>
                         <button class="btn-feedback" onclick="handleFeedback()">Cập nhật lịch trình</button>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
+            </div><!-- /itinerary -->
+        </div><!-- /result-grid -->
+    </div><!-- /result-wrap -->
+</div><!-- /screen-result -->
 
+<!-- ============================================================
+     SCREEN 4: ERROR
+============================================================ -->
 <div class="screen" id="screen-error">
     <div class="error-hero">
         <div
@@ -558,23 +699,26 @@
             <div class="error-icon">⚠️</div>
             <div class="error-title">Yêu cầu chưa đạt điều kiện</div>
             <div class="error-msg">AI không thể tạo lịch trình do một số thông tin chưa hợp lệ. Vui lòng kiểm tra và
-                điều chỉnh các mục sau:</div>
+                điều chỉnh:</div>
             <div class="error-issues" id="error-issues">
-                <div class="error-issue">📅 Khoảng thời gian vượt quá 30 ngày (hiện tại: 35 ngày)</div>
+                <div class="error-issue">📅 Khoảng thời gian vượt quá 30 ngày</div>
                 <div class="error-issue">💰 Ngân sách quá thấp (tối thiểu ~200.000 ₫/người/ngày)</div>
-                <div class="error-issue">📍 Không tìm thấy đủ địa điểm trong khu vực đã chọn</div>
             </div>
             <button class="btn-back-err" onclick="showScreen('form')">← Quay lại chỉnh sửa</button>
         </div>
     </div>
 </div>
 
+<!-- ============================================================
+     POPUPS
+============================================================ -->
+<!-- Reset confirmation -->
 <div class="popup-ov" id="popup-reset">
     <div class="popup-card glass-card">
         <div class="popup-icon">🔄</div>
         <div class="popup-title">Điền lại từ đầu?</div>
-        <div class="popup-msg">Toàn bộ thông tin bạn đã nhập sẽ bị xóa và đặt về mặc định. Thao tác này không thể hoàn
-            tác.</div>
+        <div class="popup-msg">Toàn bộ thông tin đã nhập sẽ bị xóa và đặt về mặc định. Thao tác này không thể hoàn tác.
+        </div>
         <div class="popup-acts">
             <button class="popup-cancel" onclick="closePopup('popup-reset')">Hủy</button>
             <button class="popup-confirm" onclick="doReset()">Xóa tất cả</button>
@@ -582,38 +726,31 @@
     </div>
 </div>
 
-<!-- Full-width ads stacked after footer -->
-<div class="fullwidth-ad ad-chatbot" onclick="window.location.href='{{ url_for('chatbot') }}'">
-    <div class="ad-overlay-full">
-        <div class="ad-content">
-            <h3>Trò chuyện cùng TopChat</h3>
-            <p>Gợi ý địa điểm, thời tiết, mẹo du lịch – hỗ trợ 24/7</p>
-            <div class="ad-btn-glass">Khám phá ngay</div>
+<!-- Transport warning (soft warning, user can proceed) -->
+<div class="popup-ov" id="popup-transport-warn">
+    <div class="popup-card glass-card">
+        <div class="popup-icon">⚠️</div>
+        <div class="popup-title">Lưu ý về phương tiện</div>
+        <div class="popup-msg">AI phát hiện một số vấn đề tiềm ẩn về lịch trình của bạn:</div>
+        <div class="error-issues" id="transport-warn-list"></div>
+        <div class="popup-acts">
+            <button class="popup-cancel" onclick="closePopup('popup-transport-warn');showScreen('form')">Điều chỉnh
+                lại</button>
+            <button class="popup-confirm blue" onclick="continueFromWarning()">Tiếp tục quá</button>
         </div>
     </div>
 </div>
-<div class="fullwidth-ad ad-itinerary" onclick="window.location.href='{{ url_for('index') }}'">
-    <div class="ad-overlay-full">
-        <div class="ad-content">
-            <h3>AI Itinerary Planner</h3>
-            <p>Lên lịch trình thông minh, tối ưu thời gian & chi phí</p>
-            <div class="ad-btn-glass">Bắt đầu ngay</div>
-        </div>
-    </div>
-</div>
-<div class="fullwidth-ad ad-footer" onclick="window.location.href='{{ url_for('chatbot') }}'">
-    <div class="ad-overlay-full">
-        <div class="ad-content">
-            <h3>TopGo AI – Đồng hành cùng mọi chuyến đi</h3>
-            <p>Từ lên ý tưởng đến đặt chỗ, AI lo liệu giúp bạn</p>
-            <div class="ad-btn-glass">Trải nghiệm ngay</div>
-        </div>
-    </div>
-</div>
+
 {% endblock %}
 
 {% block scripts %}
+<!-- Leaflet JS — must load before script.js uses L.map() -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
-    // Page-specific scripts if needed
+    // Page-level override: transport select change also triggers hint
+    document.addEventListener('DOMContentLoaded', () => {
+        const sel = document.getElementById('transport-type');
+        if (sel) sel.addEventListener('change', updateTransportHint);
+    });
 </script>
 {% endblock %}

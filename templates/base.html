@@ -39,10 +39,13 @@
                 <a class="nav-a" href="#">Hoạt động</a>
             </nav>
             <div class="user-info">
-                <div class="user-avatar">🤖</div>
+                <div class="user-avatar">
+                    <img src="{{ url_for('static', filename='../static/img/my-icon.png') }}" width="32" height="32"
+                        style="border-radius:50%;">
+                </div>
                 <div class="user-details">
-                    <div class="user-name">TopGo Đến Đây</div>
-                    <div class="user-badge">coming soon...</div>
+                    <div class="user-name">TopGo</div>
+                    <div class="user-badge">Việt Nam</div>
                 </div>
             </div>
         </div>
@@ -51,6 +54,37 @@
     <main>
         {% block content %}{% endblock %}
     </main>
+
+    <!-- 3 BANNER ADS – full width, không bo góc, margin 0 -->
+    <div class="fullwidth-ad ad-chatbot" onclick="window.location.href='{{ url_for('chatbot') }}'">
+        <div class="ad-overlay-full">
+            <div class="ad-content">
+                <h3>💬 Trò chuyện cùng TopChat</h3>
+                <p>Gợi ý địa điểm, thời tiết, mẹo du lịch – hỗ trợ 24/7</p>
+                <div class="ad-btn-glass">Khám phá ngay →</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fullwidth-ad ad-itinerary" onclick="window.location.href='{{ url_for('index') }}'">
+        <div class="ad-overlay-full">
+            <div class="ad-content">
+                <h3>✨ AI Itinerary Planner</h3>
+                <p>Lên lịch trình thông minh, tối ưu thời gian &amp; chi phí</p>
+                <div class="ad-btn-glass">Bắt đầu ngay →</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="fullwidth-ad ad-footer" onclick="window.location.href='{{ url_for('chatbot') }}'">
+        <div class="ad-overlay-full">
+            <div class="ad-content">
+                <h3>🚀 TopGo AI – Đồng hành cùng mọi chuyến đi</h3>
+                <p>Từ lên ý tưởng đến đặt chỗ, AI lo liệu giúp bạn</p>
+                <div class="ad-btn-glass">Trải nghiệm ngay →</div>
+            </div>
+        </div>
+    </div>
 
     <footer class="footer">
         <div class="footer-inner">
