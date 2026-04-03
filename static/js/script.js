@@ -146,6 +146,7 @@ function selectCity(id) {
     const city = CITIES.find(c => c.id === id);
     if (!city) return;
     selectedCity = city;
+    // Clear selected places when city changes
     selectedPlaces = [];
     renderPlaceTags();
     renderCityList(document.getElementById('city-search').value);
@@ -153,6 +154,9 @@ function selectCity(id) {
     closeDrop('dd-city');
     updateFromToDisplay();
     document.getElementById('err-city').classList.remove('show');
+    // Clear place search input
+    const placeSearch = document.getElementById('place-search');
+    if (placeSearch) placeSearch.value = '';
 }
 
 function updateFromToDisplay() {
@@ -187,7 +191,7 @@ function updateDeparture(val) {
     }
 }
 
-// --- Places selection ---
+// --- Places selection (đã sửa lỗi hiển thị tag) ---
 function renderPlaceList(filter) {
     const list = document.getElementById('place-list');
     if (!list) return;
@@ -217,6 +221,10 @@ function renderPlaceList(filter) {
 function filterPlaces(val) { renderPlaceList(val); }
 
 function addPlace(name) {
+    if (!selectedCity) {
+        showToast('Vui lòng chọn thành phố trước', 'error');
+        return;
+    }
     if (selectedPlaces.length >= 10) {
         showToast('Chỉ được chọn tối đa 10 địa điểm', 'error');
         return;
@@ -224,27 +232,35 @@ function addPlace(name) {
     if (!selectedPlaces.includes(name)) {
         selectedPlaces.push(name);
         renderPlaceTags();
-        renderPlaceList('');
-        document.getElementById('place-search').value = '';
+        renderPlaceList(''); // refresh dropdown to remove added place
+        // Clear search input
+        const searchInput = document.getElementById('place-search');
+        if (searchInput) searchInput.value = '';
     }
 }
 
 function removePlace(name) {
     selectedPlaces = selectedPlaces.filter(p => p !== name);
     renderPlaceTags();
-    renderPlaceList('');
+    renderPlaceList(''); // refresh dropdown to show removed place again
 }
 
 function renderPlaceTags() {
     const box = document.getElementById('places-box');
     if (!box) return;
-    box.querySelectorAll('.tag').forEach(t => t.remove());
-    const search = document.getElementById('place-search');
+    // Remove all existing tags (but keep the search input)
+    const existingTags = box.querySelectorAll('.tag');
+    existingTags.forEach(tag => tag.remove());
+
+    const searchInput = document.getElementById('place-search');
+    if (!searchInput) return;
+
+    // Add tags before the search input
     selectedPlaces.forEach(p => {
         const tag = document.createElement('div');
         tag.className = 'tag';
         tag.innerHTML = `${p} <button class="tag-rm" onclick="event.stopPropagation();removePlace('${p.replace(/'/g, "\\'")}')">×</button>`;
-        box.insertBefore(tag, search);
+        box.insertBefore(tag, searchInput);
     });
 }
 
@@ -404,7 +420,7 @@ function handleBooking(hotelName) {
         .catch(() => showToast('Không thể kết nối. Thử lại sau.', 'error'));
 }
 
-// --- Generate itinerary (đã sửa để xử lý error với continue_allowed) ---
+// --- Generate itinerary ---
 function handleGenerate() {
     let valid = true;
 
@@ -477,7 +493,6 @@ function handleGenerate() {
         .then(r => r.json())
         .then(data => {
             if (data.status === 'error') {
-                // Hiển thị trang error với danh sách lỗi
                 const errorIssues = document.getElementById('error-issues');
                 if (errorIssues) {
                     errorIssues.innerHTML = data.errors.map(e => `<div class="error-issue">${e}</div>`).join('');
@@ -487,7 +502,7 @@ function handleGenerate() {
                     continueBtn.style.display = data.continue_allowed ? 'inline-flex' : 'none';
                 }
                 window._continueAllowed = data.continue_allowed;
-                window._lastPayload = payload; // lưu lại để dùng khi continue
+                window._lastPayload = payload;
                 showScreen('error');
             } else if (data.status === 'success') {
                 animateLoading(true);
@@ -500,10 +515,8 @@ function handleGenerate() {
         });
 }
 
-// Hàm xử lý khi bấm "Tiếp tục" trên màn hình error
 function continueFromError() {
     if (window._continueAllowed) {
-        // Bỏ qua lỗi, chuyển thẳng sang result (mock data)
         showScreen('result');
         setTimeout(initLeafletMap, 150);
     } else {
@@ -569,7 +582,7 @@ function doReset() {
     selectedCity = null;
     selectedPlaces = [];
     document.getElementById('city-search').value = '';
-    document.getElementById('places-box').querySelectorAll('.tag').forEach(t => t.remove());
+    renderPlaceTags();
     document.getElementById('dep-input').value = '';
     document.getElementById('pax-val').value = '1';
     document.getElementById('pax-minus').disabled = true;
