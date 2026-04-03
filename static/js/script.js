@@ -51,7 +51,6 @@ const DEP_CITY_MAP = [
 ];
 
 function detectDepartureCity(val) {
-    // Normalize: lowercase + remove accents for better matching
     const v = val.toLowerCase();
     for (const entry of DEP_CITY_MAP) {
         if (entry.keywords.some(kw => v.includes(kw))) return entry;
@@ -82,7 +81,6 @@ async function loadData() {
     if (depInput) {
         depInput.value = 'Sân bay Nội Bài, Hà Nội';
         updateDeparture('Sân bay Nội Bài, Hà Nội');
-        // Live update boarding pass when user types departure
         depInput.addEventListener('input', function () {
             updateDeparture(this.value);
         });
@@ -95,7 +93,6 @@ function showScreen(name) {
     const target = document.getElementById('screen-' + name);
     if (target) target.classList.add('active');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    // Initialize Leaflet map when result screen is shown
     if (name === 'result') {
         setTimeout(initLeafletMap, 150);
     }
@@ -156,8 +153,6 @@ function selectCity(id) {
     closeDrop('dd-city');
     updateFromToDisplay();
     document.getElementById('err-city').classList.remove('show');
-    // Re-check transport feasibility hint when city changes
-    updateTransportHint();
 }
 
 function updateFromToDisplay() {
@@ -172,7 +167,6 @@ function updateFromToDisplay() {
     }
 }
 
-// Update boarding pass "from" block when departure input changes
 function updateDeparture(val) {
     const fromEl = document.getElementById('ft-from-city');
     const fromSubEl = document.getElementById('ft-from-sub');
@@ -183,7 +177,6 @@ function updateDeparture(val) {
             fromEl.textContent = detected.code;
             fromSubEl.textContent = detected.name;
         } else {
-            // Fallback: extract last meaningful words
             const short = val.split(',')[0].trim().split(' ').slice(-2).join(' ');
             fromEl.textContent = short.length > 9 ? short.substring(0, 8) + '…' : short;
             fromSubEl.textContent = val.length > 32 ? val.substring(0, 32) + '…' : val;
@@ -192,59 +185,6 @@ function updateDeparture(val) {
         fromEl.textContent = '—';
         fromSubEl.textContent = 'Nhập điểm xuất phát bên dưới';
     }
-    updateTransportHint();
-}
-
-// --- Transport feasibility hint (non-blocking, inline) ---
-function updateTransportHint() {
-    const hint = document.getElementById('transport-hint');
-    if (!hint) return;
-    const transport = document.getElementById('transport-type').value;
-    const depVal = (document.getElementById('dep-input') || {}).value || '';
-    const depCity = detectDepartureCity(depVal);
-    const depId = depCity ? depCity.id : null;
-    const destId = selectedCity ? selectedCity.id : null;
-    const distance = getApproxDistance(depId, destId);
-
-    hint.textContent = '';
-    hint.className = 'transport-hint';
-
-    if (distance === null || distance === 0 || !transport) return;
-
-    const days = getTripDays();
-
-    if (transport === 'Xe đạp') {
-        hint.textContent = `❌ Xe đạp không phù hợp cho chuyến liên tỉnh (~${distance} km). Chọn phương tiện khác.`;
-        hint.classList.add('error');
-    } else if (transport === 'Xe máy' && distance > 800) {
-        hint.textContent = `⚠️ Xe máy cho ${distance} km rất vất vả. Cân nhắc xe khách hoặc máy bay.`;
-        hint.classList.add('warn');
-    } else if (transport === 'Xe máy' && distance > 500) {
-        hint.textContent = `⚠️ Quãng đường ${distance} km bằng xe máy nên đi ít nhất 2 ngày.`;
-        hint.classList.add('warn');
-    } else if (transport === 'Xe khách' && distance > 800) {
-        hint.textContent = `⚠️ Xe khách ${distance} km mất ~${Math.round(distance / 50)} tiếng. Tàu hỏa hoặc máy bay tiết kiệm thời gian hơn.`;
-        hint.classList.add('warn');
-    } else if ((transport === 'Ô tô riêng' || transport === 'Thuê ô tô tự lái') && distance >= 1500) {
-        hint.textContent = `❌ ${distance} km bằng ô tô cần 3–4 ngày. Đề xuất chọn máy bay cho lịch trình này.`;
-        hint.classList.add('error');
-    } else if ((transport === 'Ô tô riêng' || transport === 'Thuê ô tô tự lái') && distance > 700 && days <= 1) {
-        hint.textContent = `⚠️ Lái xe ${distance} km mất 8–12 tiếng. Phù hợp hơn nếu bạn có ít nhất 2 ngày.`;
-        hint.classList.add('warn');
-    } else if (transport === 'Máy bay' && distance <= 100) {
-        hint.textContent = `ℹ️ Khoảng cách chỉ ~${distance} km, xe khách hoặc xe máy sẽ kinh tế hơn.`;
-        hint.classList.add('info');
-    } else {
-        hint.textContent = `✓ ${transport} phù hợp cho quãng đường ~${distance} km.`;
-        hint.classList.add('ok');
-    }
-}
-
-function getTripDays() {
-    const ds = document.getElementById('date-start').value;
-    const de = document.getElementById('date-end').value;
-    if (!ds || !de) return 1;
-    return Math.max(1, Math.round((new Date(de) - new Date(ds)) / 864e5));
 }
 
 // --- Places selection ---
@@ -317,7 +257,6 @@ function adjustPax(delta) {
     document.getElementById('pax-minus').disabled = v <= 1;
     document.getElementById('pax-plus').disabled = v >= 50;
     updateBudgetPP();
-    updateTransportHint();
 }
 
 // --- Date validation ---
@@ -372,7 +311,6 @@ function validateDates() {
     }
     dur.textContent = `✓ ${diff} ngày ${diff - 1} đêm`;
     updateBudgetPP();
-    updateTransportHint();
 }
 
 // --- Budget ---
@@ -390,7 +328,6 @@ function setBudget(val, el) {
     document.getElementById('budget-input').value = parseInt(val).toLocaleString('vi-VN');
     validateBudget();
     updateBudgetPP();
-    updateTransportHint();
 }
 
 function getRawBudget() {
@@ -401,7 +338,6 @@ function validateBudget() {
     const v = getRawBudget();
     const err = document.getElementById('err-budget');
     const inp = document.getElementById('budget-input');
-    const pax = parseInt(document.getElementById('pax-val').value) || 1;
     if (v > 0 && v < 100_000) {
         err.classList.add('show');
         err.textContent = 'Tối thiểu 100.000 ₫';
@@ -425,6 +361,13 @@ function updateBudgetPP() {
     } else {
         el.textContent = '';
     }
+}
+
+function getTripDays() {
+    const ds = document.getElementById('date-start').value;
+    const de = document.getElementById('date-end').value;
+    if (!ds || !de) return 1;
+    return Math.max(1, Math.round((new Date(de) - new Date(ds)) / 864e5));
 }
 
 // --- Preferences ---
@@ -461,25 +404,23 @@ function handleBooking(hotelName) {
         .catch(() => showToast('Không thể kết nối. Thử lại sau.', 'error'));
 }
 
-// --- Generate itinerary ---
+// --- Generate itinerary (đã sửa để xử lý error với continue_allowed) ---
 function handleGenerate() {
     let valid = true;
 
-    // City required
     if (!selectedCity) {
         document.getElementById('err-city').classList.add('show');
         valid = false;
     }
 
-    // Budget required
     const budget = getRawBudget();
-    if (!budget || budget < 10_000) {
+    if (!budget || budget < 100_000) {
         document.getElementById('err-budget').classList.add('show');
         document.getElementById('budget-input').classList.add('err');
         valid = false;
     }
 
-    // Transport feasibility: hard block
+    // Hard stop for some impossible cases (frontend quick check)
     const transport = document.getElementById('transport-type').value;
     const depVal = (document.getElementById('dep-input') || {}).value || '';
     const depCity = detectDepartureCity(depVal);
@@ -503,13 +444,11 @@ function handleGenerate() {
 
     if (!valid) {
         showToast('Vui lòng kiểm tra lại các trường bắt buộc', 'error');
-        // Scroll to first error
         const firstErr = document.querySelector('.f-err.show');
         if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
     }
 
-    // Generate trip ID for boarding pass
     const id = 'AI·' + Math.random().toString(36).substr(2, 4).toUpperCase() + '·' + new Date().getFullYear();
     document.getElementById('tb-trip-id').textContent = 'TRIP — ' + id;
 
@@ -537,31 +476,39 @@ function handleGenerate() {
     })
         .then(r => r.json())
         .then(data => {
-            if (data.status === 'warning') {
-                // Show warning popup, but allow user to continue
-                showWarningPopup(data.warnings, () => animateLoading(true));
+            if (data.status === 'error') {
+                // Hiển thị trang error với danh sách lỗi
+                const errorIssues = document.getElementById('error-issues');
+                if (errorIssues) {
+                    errorIssues.innerHTML = data.errors.map(e => `<div class="error-issue">${e}</div>`).join('');
+                }
+                const continueBtn = document.getElementById('btn-continue-error');
+                if (continueBtn) {
+                    continueBtn.style.display = data.continue_allowed ? 'inline-flex' : 'none';
+                }
+                window._continueAllowed = data.continue_allowed;
+                window._lastPayload = payload; // lưu lại để dùng khi continue
+                showScreen('error');
+            } else if (data.status === 'success') {
+                animateLoading(true);
             } else {
-                animateLoading(data.status === 'success', data.errors);
+                animateLoading(true);
             }
         })
         .catch(() => {
-            // Network error: show result anyway (mock data)
             animateLoading(true);
         });
 }
 
-function showWarningPopup(warnings, onContinue) {
-    const el = document.getElementById('popup-transport-warn');
-    const listEl = document.getElementById('transport-warn-list');
-    if (!el || !listEl) { onContinue(); return; }
-    listEl.innerHTML = warnings.map(w => `<div class="error-issue">${w}</div>`).join('');
-    el.classList.add('open');
-    window._warnContinue = onContinue;
-}
-
-function continueFromWarning() {
-    closePopup('popup-transport-warn');
-    if (typeof window._warnContinue === 'function') window._warnContinue();
+// Hàm xử lý khi bấm "Tiếp tục" trên màn hình error
+function continueFromError() {
+    if (window._continueAllowed) {
+        // Bỏ qua lỗi, chuyển thẳng sang result (mock data)
+        showScreen('result');
+        setTimeout(initLeafletMap, 150);
+    } else {
+        showScreen('form');
+    }
 }
 
 function resetLoadingSteps() {
@@ -609,7 +556,6 @@ function animateLoading(success, errors) {
         document.querySelectorAll('.ls').forEach(s => { s.classList.remove('active'); s.classList.add('done'); });
         setTimeout(() => {
             if (!success && errors && errors.length) {
-                // Show backend errors on error screen
                 const errEl = document.getElementById('error-issues');
                 if (errEl) errEl.innerHTML = errors.map(e => `<div class="error-issue">${e}</div>`).join('');
             }
@@ -641,17 +587,13 @@ function doReset() {
     document.getElementById('ft-from-sub').textContent = 'Nhập điểm xuất phát bên dưới';
     document.getElementById('ft-to-city').textContent = '—';
     document.getElementById('ft-to-sub').textContent = 'Chọn thành phố bên dưới';
-    const hint = document.getElementById('transport-hint');
-    if (hint) { hint.textContent = ''; hint.className = 'transport-hint'; }
     renderCityList('');
     closePopup('popup-reset');
     showToast('✓ Đã đặt lại tất cả thông tin', 'success');
 }
 
-// --- Save (requires login) ---
 function handleSave() { showPopup('popup-login'); }
 
-// --- Feedback ---
 function handleFeedback() {
     const val = document.getElementById('feedback-input').value.trim();
     if (!val) { showToast('Vui lòng nhập phản hồi', 'error'); return; }
@@ -673,7 +615,6 @@ function handleFeedback() {
     }, 2500);
 }
 
-// --- Popup & Toast ---
 function showPopup(id) {
     const el = document.getElementById(id);
     if (el) el.classList.add('open');
@@ -695,18 +636,16 @@ function showToast(msg, type) {
     tm.textContent = msg;
     t.className = 'toast show' + (type ? ' ' + type : '');
     clearTimeout(toastT);
-    // Longer duration for errors
     toastT = setTimeout(() => { t.className = 'toast'; }, type === 'error' ? 4500 : 3200);
 }
 
 // ============================================================
-//  LEAFLET MAP  –  real interactive map with OSM tiles
+//  LEAFLET MAP
 // ============================================================
 function initLeafletMap() {
     const container = document.getElementById('leaflet-map');
     if (!container || typeof L === 'undefined') return;
 
-    // Destroy previous instance if re-entering result screen
     if (leafletMapInstance) {
         leafletMapInstance.remove();
         leafletMapInstance = null;
@@ -714,16 +653,14 @@ function initLeafletMap() {
 
     leafletMapInstance = L.map('leaflet-map', {
         zoomControl: true,
-        scrollWheelZoom: false,  // Prevent accidental page-scroll interference
+        scrollWheelZoom: false,
     }).setView([16.0, 108.1], 10);
 
-    // OpenStreetMap tiles – no API key required
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 18,
     }).addTo(leafletMapInstance);
 
-    // Sample stops for Da Nang / Hoi An trip
     const stops = [
         { name: 'Sân bay Đà Nẵng', lat: 16.044, lng: 108.200, emoji: '✈️', color: '#3674B5', day: 1 },
         { name: 'Bãi biển Mỹ Khê', lat: 16.065, lng: 108.247, emoji: '🏖️', color: '#0C9E72', day: 1 },
@@ -735,7 +672,6 @@ function initLeafletMap() {
 
     const latlngs = stops.map(s => [s.lat, s.lng]);
 
-    // Dashed route polyline
     L.polyline(latlngs, {
         color: '#00A9FF',
         weight: 4,
@@ -744,7 +680,6 @@ function initLeafletMap() {
         lineJoin: 'round',
     }).addTo(leafletMapInstance);
 
-    // Custom emoji markers
     stops.forEach(s => {
         const icon = L.divIcon({
             className: '',
@@ -774,10 +709,8 @@ function initLeafletMap() {
             .bindPopup(`<strong>${s.name}</strong><br><small>Ngày ${s.day} trong lịch trình</small>`);
     });
 
-    // Fit all stops in view
     leafletMapInstance.fitBounds(latlngs, { padding: [24, 24] });
     setTimeout(() => leafletMapInstance.invalidateSize(), 250);
 }
 
-// --- Init ---
 loadData();

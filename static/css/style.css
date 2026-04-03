@@ -2415,3 +2415,23 @@ body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; 
 
 /* ========== TRANSPORT WARNING POPUP ========== */
 #popup-transport-warn .error-issues { margin-bottom: 16px; }
+/* Nút Tiếp tục trên màn hình error */
+.btn-continue {
+    background: linear-gradient(90deg, var(--p1), var(--p2));
+    border: none;
+    border-radius: var(--r-s);
+    padding: 12px 30px;
+    font-family: var(--font);
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    transition: all var(--t);
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+}
+.btn-continue:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(0,169,255,0.4);
+}

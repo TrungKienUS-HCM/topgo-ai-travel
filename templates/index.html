@@ -162,7 +162,7 @@
                     <!-- Transport — xe đạp removed (not feasible for inter-city travel) -->
                     <div class="stub-field">
                         <span class="stub-label">Loại hình phương tiện</span>
-                        <select class="stub-date" id="transport-type" onchange="updateTransportHint()">
+                        <select class="stub-date" id="transport-type">
                             <option value="Xe khách">Xe khách</option>
                             <option value="Máy bay">Máy bay</option>
                             <option value="Tàu hỏa">Tàu hỏa</option>
@@ -170,8 +170,6 @@
                             <option value="Xe máy">Xe máy</option>
                             <option value="Thuê ô tô tự lái">Thuê ô tô tự lái</option>
                         </select>
-                        <!-- Live transport feasibility hint -->
-                        <span class="transport-hint" id="transport-hint"></span>
                     </div>
 
                     <!-- Accommodation -->
@@ -679,26 +677,27 @@
 </div><!-- /screen-result -->
 
 <!-- ============================================================
-     SCREEN 4: ERROR
+     SCREEN 4: ERROR (đã sửa - thêm nút Tiếp tục)
 ============================================================ -->
 <div class="screen" id="screen-error">
     <div class="error-hero">
         <div
             style="font-size:11px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.55);text-transform:uppercase;margin-bottom:8px">
-            TopGo.AI · AI Planner</div>
+            TopGo.AI · AI Planner
+        </div>
         <h2>Không thể tạo lịch trình</h2>
     </div>
     <div class="error-outer">
         <div class="error-card glass-card">
             <div class="error-icon">⚠️</div>
             <div class="error-title">Yêu cầu chưa đạt điều kiện</div>
-            <div class="error-msg">AI không thể tạo lịch trình do một số thông tin chưa hợp lệ. Vui lòng kiểm tra và
-                điều chỉnh:</div>
-            <div class="error-issues" id="error-issues">
-                <div class="error-issue">📅 Khoảng thời gian vượt quá 30 ngày</div>
-                <div class="error-issue">💰 Ngân sách quá thấp (tối thiểu ~200.000 ₫/người/ngày)</div>
+            <div class="error-msg">AI phát hiện một số vấn đề với thông tin của bạn:</div>
+            <div class="error-issues" id="error-issues"></div>
+            <div class="popup-acts" style="margin-top: 20px; justify-content: center;">
+                <button class="btn-back-err" onclick="showScreen('form')">← Quay lại chỉnh sửa</button>
+                <button class="btn-continue" id="btn-continue-error" style="display: none;"
+                    onclick="continueFromError()">Tiếp tục →</button>
             </div>
-            <button class="btn-back-err" onclick="showScreen('form')">← Quay lại chỉnh sửa</button>
         </div>
     </div>
 </div>
@@ -720,20 +719,7 @@
     </div>
 </div>
 
-<!-- Transport warning (soft warning, user can proceed) -->
-<div class="popup-ov" id="popup-transport-warn">
-    <div class="popup-card glass-card">
-        <div class="popup-icon">⚠️</div>
-        <div class="popup-title">Lưu ý về phương tiện</div>
-        <div class="popup-msg">AI phát hiện một số vấn đề tiềm ẩn về lịch trình của bạn:</div>
-        <div class="error-issues" id="transport-warn-list"></div>
-        <div class="popup-acts">
-            <button class="popup-cancel" onclick="closePopup('popup-transport-warn');showScreen('form')">Điều chỉnh
-                lại</button>
-            <button class="popup-confirm blue" onclick="continueFromWarning()">Tiếp tục quá</button>
-        </div>
-    </div>
-</div>
+<!-- Đã xóa popup-transport-warn vì không còn dùng -->
 
 {% endblock %}
 
@@ -741,10 +727,9 @@
 <!-- Leaflet JS — must load before script.js uses L.map() -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
-    // Page-level override: transport select change also triggers hint
+    // Page-level override: không còn transport hint
     document.addEventListener('DOMContentLoaded', () => {
-        const sel = document.getElementById('transport-type');
-        if (sel) sel.addEventListener('change', updateTransportHint);
+        // Không làm gì thêm
     });
 </script>
 {% endblock %}

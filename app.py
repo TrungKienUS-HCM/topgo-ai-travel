@@ -176,6 +176,7 @@ PLACES_DATA = {
 }
 
 # Approximate road distances between cities (km)
+# === TẠM THỜI GÁN CỨNG - SAU SẼ TÍCH HỢP DỮ LIỆU THỰC TẾ ===
 CITY_DISTANCES = {
     ("ha", "hcm"): 1700,
     ("hcm", "ha"): 1700,
@@ -220,6 +221,7 @@ CITY_DISTANCES = {
 }
 
 # Minimum budget per person for each transport type (VND, one-way)
+# === TẠM THỜI GÁN CỨNG - SAU SẼ TÍCH HỢP DỮ LIỆU THỰC TẾ ===
 TRANSPORT_MIN_PER_PAX = {
     "Máy bay": 700_000,
     "Tàu hỏa": 200_000,
@@ -230,6 +232,7 @@ TRANSPORT_MIN_PER_PAX = {
 }
 
 # Suggested minimum budget per night per room for accommodation types
+# === TẠM THỜI GÁN CỨNG - SAU SẼ TÍCH HỢP DỮ LIỆU THỰC TẾ ===
 ACCOMMODATION_MIN_PER_NIGHT = {
     "Resort": 1_200_000,
     "Villa": 1_500_000,
@@ -352,12 +355,16 @@ def api_generate():
     return_time = data.get("return_time", "18:00")
 
     errors = []
+    continue_allowed = True  # sẽ set False nếu có lỗi cứng
 
+    # ----- Lỗi cứng (không thể tiếp tục) -----
     if not city_id:
         errors.append("📍 Chưa chọn thành phố muốn đến.")
+        continue_allowed = False
 
     if budget < 10000:
         errors.append("💰 Ngân sách tối thiểu 10.000 ₫.")
+        continue_allowed = False
 
     days = 1
     if date_start and date_end:
@@ -370,43 +377,104 @@ def api_generate():
                 errors.append(
                     f"📅 Khoảng thời gian vượt quá 30 ngày (hiện tại: {diff} ngày)."
                 )
+                continue_allowed = False
             if de <= ds:
                 errors.append("📅 Ngày kết thúc phải sau ngày bắt đầu.")
+                continue_allowed = False
         except ValueError:
             errors.append("📅 Định dạng ngày không hợp lệ.")
+            continue_allowed = False
 
-    # Minimum budget per person/day (food, activities, local transport)
-    if not errors and pax and budget and date_start and date_end:
-        try:
-            min_budget = pax * days * 200_000
-            if budget < min_budget:
-                errors.append(
-                    f"💰 Ngân sách quá thấp. Tối thiểu ~{min_budget:,} ₫ cho {pax} người × {days} ngày (200.000 ₫/người/ngày)."
-                )
-        except Exception:
-            pass
+    # Khoảng cách
+    distance = None
+    if dep_city_id and city_id:
+        distance = CITY_DISTANCES.get((dep_city_id, city_id))
 
-    # Transport feasibility
-    if transport and city_id and not errors:
-        transport_errors = validate_transport(
-            city_id, dep_city_id, transport, days, pax, budget
+    # Lỗi cứng về phương tiện
+    if transport == "Xe đạp":
+        errors.append(
+            "Xe đạp không phù hợp cho các chuyến du lịch liên tỉnh. Vui lòng chọn phương tiện khác."
         )
-        hard = [e for e in transport_errors if e.startswith("❌")]
-        soft = [e for e in transport_errors if not e.startswith("❌")]
-        errors.extend(hard)
-        if errors:
-            return jsonify({"status": "error", "errors": errors})
-        if soft:
-            return jsonify({"status": "warning", "warnings": soft})
+        continue_allowed = False
 
-    # Accommodation budget check
-    if accommodation and not errors:
-        acc_errors = validate_accommodation(accommodation, budget, pax, days)
-        if acc_errors:
-            errors.extend(acc_errors)
+    if distance is not None and distance > 0:
+        if transport == "Xe máy" and distance > 800:
+            errors.append(
+                f"Xe máy không phù hợp cho quãng đường {distance} km. Hãy chọn xe khách, tàu hỏa hoặc máy bay."
+            )
+            continue_allowed = False
+        if (
+            transport in ("Ô tô riêng", "Thuê ô tô tự lái")
+            and distance >= 1500
+            and days < 3
+        ):
+            errors.append(
+                f"❌ Quãng đường {distance} km bằng ô tô cần ít nhất 3–4 ngày (hiện tại: {days} ngày). Đề xuất chọn máy bay."
+            )
+            continue_allowed = False
+
+        # Kiểm tra ngân sách vé máy bay (lỗi cứng)
+        if transport == "Máy bay":
+            min_flight = pax * TRANSPORT_MIN_PER_PAX["Máy bay"] * 2
+            if budget < min_flight:
+                errors.append(
+                    f"💰 Ngân sách quá thấp cho vé máy bay khứ hồi. Cần tối thiểu ~{min_flight:,} ₫ cho {pax} người. (Hiện tại: {budget:,} ₫)"
+                )
+                continue_allowed = False
+
+        # Kiểm tra ngân sách thuê xe tự lái (lỗi cứng)
+        if transport == "Thuê ô tô tự lái":
+            rental_cost = 500_000 * days
+            if budget < rental_cost:
+                errors.append(
+                    f"💰 Ngân sách không đủ cho thuê xe tự lái {days} ngày (tối thiểu {rental_cost:,} ₫). Hãy chọn phương tiện khác hoặc tăng ngân sách."
+                )
+                continue_allowed = False
+
+    # Kiểm tra ngân sách chỗ ở (lỗi cứng)
+    if accommodation:
+        min_per_night = ACCOMMODATION_MIN_PER_NIGHT.get(accommodation, 200_000)
+        rooms_needed = (pax + 1) // 2
+        total_min_accommodation = min_per_night * rooms_needed * days
+        if budget < total_min_accommodation:
+            errors.append(
+                f"💰 Ngân sách không đủ cho loại hình {accommodation} với {pax} người trong {days} ngày. Cần tối thiểu ~{total_min_accommodation:,} ₫ cho chỗ ở (giả sử {rooms_needed} phòng)."
+            )
+            continue_allowed = False
+
+    # ----- Cảnh báo mềm (vẫn cho phép tiếp tục) -----
+    # Chỉ thêm cảnh báo nếu chưa có lỗi cứng (để tránh spam)
+    if continue_allowed:
+        # Ngân sách tối thiểu 200k/người/ngày (cảnh báo, không chặn)
+        min_budget = pax * days * 200_000
+        if budget < min_budget:
+            errors.append(
+                f"⚠️ Ngân sách thấp hơn mức khuyến nghị (tối thiểu ~{min_budget:,} ₫ cho {pax} người × {days} ngày). Bạn vẫn có thể tiếp tục nhưng trải nghiệm có thể bị ảnh hưởng."
+            )
+
+        # Cảnh báo phương tiện mềm
+        if distance is not None and distance > 0:
+            if transport == "Xe máy" and 500 < distance <= 800:
+                errors.append(
+                    f"⚠️ Quãng đường {distance} km bằng xe máy rất vất vả và nguy hiểm. Cân nhắc phương tiện khác."
+                )
+            if transport == "Xe khách" and distance > 800:
+                errors.append(
+                    f"⚠️ Xe khách cho {distance} km sẽ mất 15–20 tiếng. Hãy cân nhắc tàu hỏa hoặc máy bay."
+                )
+            if (
+                transport in ("Ô tô riêng", "Thuê ô tô tự lái")
+                and distance > 700
+                and days <= 1
+            ):
+                errors.append(
+                    f"⚠️ Lái xe {distance} km mất 8–12 tiếng, không khả thi trong {days} ngày. Cân nhắc máy bay hoặc tàu."
+                )
 
     if errors:
-        return jsonify({"status": "error", "errors": errors})
+        return jsonify(
+            {"status": "error", "errors": errors, "continue_allowed": continue_allowed}
+        )
 
     return jsonify({"status": "success"})
 
