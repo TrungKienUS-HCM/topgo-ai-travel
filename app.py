@@ -20,7 +20,7 @@ CITIES_DATA = [
         "name": "Hà Nội",
         "abbr": "HAN",
         "sub": "Miền Bắc",
-        "img": "/static/img/cities/ha-noi.jpg",
+        "img": "/static/img/cities/ha-noi.png",
         "color": "#578FCA",
     },
     {
@@ -99,6 +99,8 @@ PLACES_DATA = {
         "Cầu Vàng",
         "Bán đảo Sơn Trà",
         "Phố đêm Đà Nẵng",
+        "Nhà thờ Chính tòa Đà Nẵng",
+        "Công viên Châu Á",
     ],
     "hoian": [
         "Phố Cổ Hội An",
@@ -107,6 +109,10 @@ PLACES_DATA = {
         "Biển Cửa Đại",
         "Làng gốm Thanh Hà",
         "Mỳ Cao Lầu",
+        "Đảo Cù Lao Chàm",
+        "Hội quán Phúc Kiến",
+        "Nhà cổ Tấn Ký",
+        "Chợ đêm Hội An",
     ],
     "ha": [
         "Hồ Hoàn Kiếm",
@@ -116,6 +122,9 @@ PLACES_DATA = {
         "Hồ Tây",
         "Chùa Một Cột",
         "Hoàng Thành Thăng Long",
+        "Nhà thờ Lớn Hà Nội",
+        "Bảo tàng Dân tộc học",
+        "Cầu Long Biên",
     ],
     "hcm": [
         "Nhà thờ Đức Bà",
@@ -124,6 +133,10 @@ PLACES_DATA = {
         "Bảo tàng Chứng tích Chiến tranh",
         "Dinh Độc Lập",
         "Phố đi bộ Nguyễn Huệ",
+        "Bến Nhà Rồng",
+        "Chùa Vĩnh Nghiêm",
+        "Suối Tiên",
+        "Bảo tàng Mỹ thuật TP.HCM",
     ],
     "nt": [
         "Tháp Bà Ponagar",
@@ -132,6 +145,10 @@ PLACES_DATA = {
         "Đảo Hòn Mun",
         "Chùa Long Sơn",
         "Biển Bãi Dài",
+        "Hòn Chồng",
+        "Suối khoáng nóng Tháp Bà",
+        "Nhà thờ Núi",
+        "Viện Hải dương học",
     ],
     "dl": [
         "Hồ Xuân Hương",
@@ -140,6 +157,10 @@ PLACES_DATA = {
         "Làng hoa Vạn Thành",
         "Làng Cù Lần",
         "Dinh Bảo Đại",
+        "Nhà thờ Con Gà",
+        "Vườn hoa Đà Lạt",
+        "Thác Pongour",
+        "Ga Đà Lạt",
     ],
     "ph": [
         "Grand World Phú Quốc",
@@ -148,6 +169,10 @@ PLACES_DATA = {
         "Vinpearl Safari",
         "Chợ đêm Phú Quốc",
         "Bãi Dài",
+        "Nhà tù Phú Quốc",
+        "Mũi Điện",
+        "Suối Tranh",
+        "Hòn Một",
     ],
     "hue": [
         "Đại Nội – Hoàng Thành Huế",
@@ -156,6 +181,10 @@ PLACES_DATA = {
         "Lăng Khải Định",
         "Cầu Trường Tiền",
         "Chợ Đông Ba",
+        "Lăng Minh Mạng",
+        "Đồi Vọng Cảnh",
+        "Sông Hương",
+        "Chùa Từ Đàm",
     ],
     "qni": [
         "Ghềnh Ráng Tiên Sa",
@@ -164,6 +193,10 @@ PLACES_DATA = {
         "Thành Hoàng Đế",
         "Bãi biển Quy Nhơn",
         "Bãi Xép",
+        "Chùa Thập Tháp",
+        "Đảo Hòn Khô",
+        "Cầu Thị Nại",
+        "Bảo tàng Quang Trung",
     ],
     "hl": [
         "Vịnh Hạ Long",
@@ -172,6 +205,10 @@ PLACES_DATA = {
         "Làng chài Cửa Vạn",
         "Đảo Cát Bà",
         "Núi Bài Thơ",
+        "Động Thiên Cung",
+        "Hang Đầu Gỗ",
+        "Bảo tàng Quảng Ninh",
+        "Chợ đêm Hạ Long",
     ],
 }
 
@@ -227,6 +264,7 @@ TRANSPORT_MIN_PER_PAX = {
     "Ô tô riêng": 0,
     "Thuê ô tô tự lái": 400_000,
     "Xe máy": 0,
+    "Xe đạp": 0,
 }
 
 # BỔ SUNG: Chi phí theo km cho tàu hỏa và xe khách (để tính toán chi phí thực tế)
@@ -241,6 +279,7 @@ AVG_SPEED = {
     "Ô tô riêng": 60,
     "Thuê ô tô tự lái": 60,
     "Xe máy": 40,
+    "Xe đạp": 15,
 }
 
 # Suggested minimum budget per night per room for accommodation types
@@ -307,14 +346,15 @@ def validate_transport(dep_id, dest_id, transport, days, pax, budget):
     if distance is None:
         return result
 
-    # 1. Xe đạp
+    # 1. Xe đạp chỉ cho phép khi cùng tỉnh (không có dep_id hoặc dep_id == dest_id)
     if transport == "Xe đạp":
-        result.append(
-            (
-                "error",
-                "Xe đạp không phù hợp cho các chuyến du lịch liên tỉnh. Vui lòng chọn phương tiện khác.",
+        if dep_id != dest_id:
+            result.append(
+                (
+                    "error",
+                    "Xe đạp chỉ phù hợp khi di chuyển trong cùng một thành phố/tỉnh. Vui lòng chọn phương tiện khác cho chuyến đi liên tỉnh.",
+                )
             )
-        )
         return result
 
     # 2. Kiểm tra thời gian di chuyển so với số ngày
@@ -447,7 +487,7 @@ def simulate_actual_pricing_check(city_id, budget, pax, days):
     required_budget = pax * days * min_budget_per_person_per_day
     if budget < required_budget:
         return True, [
-            f"💰 Sau khi tra cứu giá thực tế (DEMO), hệ thống ước tính cần tối thiểu {required_budget:,} ₫ cho {pax} người trong {days} ngày. Ngân sách của bạn ({budget:,} ₫) không đáp ứng được. Vui lòng tăng ngân sách hoặc giảm số ngày/số người."
+            f"💰 Sau khi tra cứu giá thực tế, hệ thống ước tính cần tối thiểu {required_budget:,} ₫ cho {pax} người trong {days} ngày. Ngân sách của bạn ({budget:,} ₫) không đáp ứng được. Vui lòng tăng ngân sách hoặc giảm số ngày/số người."
         ]
     return False, []
 
@@ -505,8 +545,8 @@ def api_generate():
     if not isinstance(budget, (int, float)) or budget <= 0:
         errors.append("💰 Ngân sách phải là số dương lớn hơn 0.")
         continue_allowed = False
-    elif budget < 10000:
-        errors.append("💰 Ngân sách tối thiểu 10.000 ₫.")
+    elif budget < 100000:
+        errors.append("💰 Ngân sách tối thiểu 100.000 ₫.")
         continue_allowed = False
 
     # 3. Kiểm tra số hành khách
@@ -514,28 +554,29 @@ def api_generate():
         errors.append("👥 Số lượng hành khách phải từ 1 đến 50.")
         continue_allowed = False
 
-    # 4. Kiểm tra ngày tháng
+    # 4. Kiểm tra ngày tháng (cho phép ngày về trùng ngày đi, nhưng giờ về phải sau giờ đi, tối đa 7 ngày)
     days = 1
     if date_start and date_end:
         try:
             ds = datetime.strptime(date_start, "%Y-%m-%d")
             de = datetime.strptime(date_end, "%Y-%m-%d")
             today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-            # BỔ SUNG: Kiểm tra ngày ở quá khứ
+            # Kiểm tra ngày ở quá khứ
             if ds < today:
                 errors.append("📅 Ngày khởi hành không được ở quá khứ.")
                 continue_allowed = False
             diff = (de - ds).days
             days = max(diff, 1)
-            if diff > 30:
+            # CONSTRAINT: tối đa 7 ngày
+            if diff > 7:
                 errors.append(
-                    f"📅 Khoảng thời gian vượt quá 30 ngày (hiện tại: {diff} ngày)."
+                    f"📅 Khoảng thời gian vượt quá 7 ngày (hiện tại: {diff} ngày)."
                 )
                 continue_allowed = False
-            if de <= ds:
-                errors.append("📅 Ngày kết thúc phải sau ngày bắt đầu.")
+            if diff < 0:
+                errors.append("📅 Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.")
                 continue_allowed = False
-            # BỔ SUNG: Kiểm tra giờ nếu cùng ngày
+            # Nếu cùng ngày, kiểm tra giờ
             if diff == 0:
                 try:
                     dt_dep = datetime.strptime(departure_time, "%H:%M")

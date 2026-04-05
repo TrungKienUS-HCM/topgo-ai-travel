@@ -440,7 +440,7 @@ body {
   padding: 0 8px;
 }
 .ft-plane-icon { color: var(--p2); }
-.ft-plane-icon svg { width: 26px; height: 26px; }
+.ft-plane-icon svg { width: 26px; height: 26px; transform: rotate(90deg); }  /* XOAY 90 ĐỘ */
 .ft-dashed {
   width: 100%;
   height: 1px;
@@ -2010,12 +2010,12 @@ body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; 
   color: var(--muted);
 }
 
-/* ========== ADS (full width, margin 0, no border-radius, reduced blur) ========== */
+/* ========== ADS (full width, margin 0, no border-radius, liquid glass) ========== */
 .fullwidth-ad {
   position: relative;
   width: 100%;
   margin: 0;
-  height: 256px;        /* giữ nguyên chiều cao */
+  height: 256px;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -2031,8 +2031,10 @@ body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; 
 .ad-overlay-full {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(0,169,255,0.95), rgba(0,169,255,0.8), rgba(137,207,243,0.6));
-  backdrop-filter: blur(2px);
+  /* Làm nhạt màu xanh, tăng hiệu ứng liquid glass */
+  background: linear-gradient(135deg, rgba(0,169,255,0.5), rgba(137,207,243,0.5));
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2434,4 +2436,16 @@ body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; 
 .btn-continue:hover {
     transform: translateY(-1px);
     box-shadow: 0 6px 18px rgba(0,169,255,0.4);
+}
+
+/* Modal map lớn */
+#popup-map .popup-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: var(--r-xl);
+    overflow: hidden;
+}
+#leaflet-modal-map {
+    border-radius: var(--r-l);
+    border: 1px solid rgba(255,255,255,0.5);
 }

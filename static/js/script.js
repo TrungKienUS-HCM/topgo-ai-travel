@@ -1,5 +1,5 @@
 /* ============================================================
-   TopGo.AI — script.js
+   TopGo — script.js
    Main client-side logic for AI Itinerary Planner
    ============================================================ */
 
@@ -8,7 +8,11 @@ let CITIES = [];
 let PLACES_BY_CITY = {};
 let selectedCity = null;
 let selectedPlaces = [];
-let leafletMapInstance = null; // Leaflet map singleton
+let leafletMapInstance = null; // Leaflet map cho preview nhỏ
+let leafletModalMapInstance = null; // Leaflet map cho modal lớn
+let citySearchDebounceTimer = null;
+let placeSearchDebounceTimer = null;
+let currentHotelMarker = null; // để đánh dấu hotel được chọn
 
 // Approximate road distances (km) between city pairs
 const CITY_DIST = {
@@ -95,6 +99,45 @@ function showScreen(name) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     if (name === 'result') {
         setTimeout(initLeafletMap, 150);
+        // Gắn sự kiện click cho các hotel card
+        attachHotelClickEvents();
+    }
+}
+
+// Gắn sự kiện click cho hotel card
+function attachHotelClickEvents() {
+    const hotelCards = document.querySelectorAll('.hotel-c-card');
+    hotelCards.forEach(card => {
+        // Xóa event cũ nếu có
+        card.removeEventListener('click', handleHotelClick);
+        card.addEventListener('click', handleHotelClick);
+    });
+}
+
+function handleHotelClick(event) {
+    // Ngăn không cho click vào button bên trong (nếu có) nhưng hiện tại không có button
+    // Lấy data-hotel từ thẻ
+    const hotelData = JSON.parse(this.getAttribute('data-hotel'));
+    if (hotelData && leafletMapInstance) {
+        // Xóa marker cũ nếu có
+        if (currentHotelMarker) {
+            leafletMapInstance.removeLayer(currentHotelMarker);
+        }
+        // Tạo marker mới
+        const hotelIcon = L.divIcon({
+            className: '',
+            html: `<div style="background:${hotelData.color};color:#fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:16px;border:2px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3);">🏨</div>`,
+            iconSize: [32, 32],
+            iconAnchor: [16, 16],
+            popupAnchor: [0, -16]
+        });
+        currentHotelMarker = L.marker([hotelData.lat, hotelData.lng], { icon: hotelIcon })
+            .addTo(leafletMapInstance)
+            .bindPopup(`<strong>${hotelData.name}</strong><br>📍 Đã chọn`)
+            .openPopup();
+        // Di chuyển map đến hotel
+        leafletMapInstance.setView([hotelData.lat, hotelData.lng], 15);
+        showToast(`Đã định vị ${hotelData.name} trên bản đồ`, 'success');
     }
 }
 
@@ -113,7 +156,7 @@ function toggleDrop(id) {
     el.classList.contains('open') ? closeDrop(id) : openDrop(id);
 }
 
-// --- City selection ---
+// --- City selection with debounce to reduce lag ---
 function renderCityList(filter) {
     const list = document.getElementById('city-list');
     if (!list) return;
@@ -140,7 +183,13 @@ function renderCityList(filter) {
     }).join('');
 }
 
-function filterCities(val) { renderCityList(val); }
+function filterCitiesDebounced(val) {
+    if (citySearchDebounceTimer) clearTimeout(citySearchDebounceTimer);
+    citySearchDebounceTimer = setTimeout(() => {
+        renderCityList(val);
+    }, 200);
+}
+function filterCities(val) { filterCitiesDebounced(val); }
 
 function selectCity(id) {
     const city = CITIES.find(c => c.id === id);
@@ -191,7 +240,7 @@ function updateDeparture(val) {
     }
 }
 
-// --- Places selection (đã sửa lỗi hiển thị tag) ---
+// --- Places selection (FIXED: click chọn option update đúng) ---
 function renderPlaceList(filter) {
     const list = document.getElementById('place-list');
     if (!list) return;
@@ -218,7 +267,13 @@ function renderPlaceList(filter) {
     ).join('');
 }
 
-function filterPlaces(val) { renderPlaceList(val); }
+function filterPlacesDebounced(val) {
+    if (placeSearchDebounceTimer) clearTimeout(placeSearchDebounceTimer);
+    placeSearchDebounceTimer = setTimeout(() => {
+        renderPlaceList(val);
+    }, 200);
+}
+function filterPlaces(val) { filterPlacesDebounced(val); }
 
 function addPlace(name) {
     if (!selectedCity) {
@@ -236,6 +291,8 @@ function addPlace(name) {
         // Clear search input
         const searchInput = document.getElementById('place-search');
         if (searchInput) searchInput.value = '';
+        // Đóng dropdown sau khi chọn (tùy chọn)
+        closeDrop('dd-place');
     }
 }
 
@@ -275,7 +332,7 @@ function adjustPax(delta) {
     updateBudgetPP();
 }
 
-// --- Date validation ---
+// --- Date validation (tối đa 7 ngày, cho phép cùng ngày) ---
 (function initDates() {
     const today = new Date();
     const fmt = d => d.toISOString().split('T')[0];
@@ -313,19 +370,33 @@ function validateDates() {
         return;
     }
     const diff = Math.round((de - ds) / 864e5);
-    if (diff <= 0) {
+    if (diff < 0) {
         errE.classList.add('show');
-        errE.textContent = 'Ngày về phải sau ngày đi';
+        errE.textContent = 'Ngày về phải sau hoặc bằng ngày đi';
         e.classList.add('err');
         return;
     }
-    if (diff > 30) {
+    // CONSTRAINT: tối đa 7 ngày
+    if (diff > 7) {
         errE.classList.add('show');
-        errE.textContent = `Tối đa 30 ngày (hiện tại: ${diff} ngày)`;
+        errE.textContent = `Tối đa 7 ngày (hiện tại: ${diff} ngày)`;
         e.classList.add('err');
         return;
     }
-    dur.textContent = `✓ ${diff} ngày ${diff - 1} đêm`;
+    // Nếu cùng ngày, kiểm tra giờ
+    if (diff === 0) {
+        const timeStart = document.getElementById('time-start').value;
+        const timeEnd = document.getElementById('time-end').value;
+        if (timeStart && timeEnd && timeEnd <= timeStart) {
+            errE.classList.add('show');
+            errE.textContent = 'Giờ kết thúc phải sau giờ khởi hành trong cùng ngày';
+            e.classList.add('err');
+            return;
+        }
+        dur.textContent = `✓ ${diff + 1} ngày (trong ngày)`;
+    } else {
+        dur.textContent = `✓ ${diff} ngày ${diff - 1} đêm`;
+    }
     updateBudgetPP();
 }
 
@@ -383,7 +454,8 @@ function getTripDays() {
     const ds = document.getElementById('date-start').value;
     const de = document.getElementById('date-end').value;
     if (!ds || !de) return 1;
-    return Math.max(1, Math.round((new Date(de) - new Date(ds)) / 864e5));
+    const diff = Math.max(1, Math.round((new Date(de) - new Date(ds)) / 864e5));
+    return diff;
 }
 
 // --- Preferences ---
@@ -405,19 +477,12 @@ function updateCharCount(el, id) {
     c.className = 'char-c' + (len >= max ? ' over' : len > max * 0.9 ? ' warn' : '');
 }
 
-// --- Booking handler ---
-function handleBooking(hotelName) {
-    showToast('⏳ Đang kiểm tra phòng trống cho ' + hotelName + '...', '');
-    fetch('/api/book', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
-        .then(r => r.json())
-        .then(data => {
-            if (data.available) {
-                showToast('✅ ' + hotelName + ' còn phòng! Liên hệ để đặt.', 'success');
-            } else {
-                showToast('😕 ' + hotelName + ' hết phòng cho ngày này. Thử ngày khác!', 'error');
-            }
-        })
-        .catch(() => showToast('Không thể kết nối. Thử lại sau.', 'error'));
+// --- Sanitize textarea input ---
+function sanitizeText(text) {
+    // Remove any HTML tags, trim, and limit length
+    let sanitized = text.replace(/<[^>]*>/g, '').trim();
+    if (sanitized.length > 500) sanitized = sanitized.substring(0, 500);
+    return sanitized;
 }
 
 // --- Generate itinerary ---
@@ -444,9 +509,14 @@ function handleGenerate() {
     const destId = selectedCity ? selectedCity.id : null;
     const distance = getApproxDistance(depId, destId);
 
-    if (transport === 'Xe đạp') {
-        showToast('❌ Xe đạp không phù hợp cho chuyến liên tỉnh. Chọn phương tiện khác.', 'error');
+    // Xe đạp chỉ cho phép khi cùng tỉnh (không có depId hoặc depId === destId)
+    if (transport === 'Xe đạp' && depId && destId && depId !== destId) {
+        showToast('❌ Xe đạp chỉ phù hợp khi đi lại trong cùng một thành phố/tỉnh. Vui lòng chọn phương tiện khác cho chuyến liên tỉnh.', 'error');
         valid = false;
+    }
+
+    if (transport === 'Xe đạp' && (!depId || !destId)) {
+        // Nếu không có điểm xuất phát cụ thể, mặc định cho phép (coi như đi nội tỉnh)
     }
 
     if (distance && distance >= 1500 &&
@@ -471,6 +541,10 @@ function handleGenerate() {
     showScreen('loading');
     resetLoadingSteps();
 
+    // Sanitize notes before sending
+    const rawNotes = document.getElementById('notes-input').value;
+    const sanitizedNotes = sanitizeText(rawNotes);
+
     const payload = {
         city_id: selectedCity.id,
         dep_city_id: depId,
@@ -478,7 +552,7 @@ function handleGenerate() {
         pax: parseInt(document.getElementById('pax-val').value),
         date_start: document.getElementById('date-start').value,
         date_end: document.getElementById('date-end').value,
-        notes: document.getElementById('notes-input').value,
+        notes: sanitizedNotes,
         transport,
         accommodation: document.getElementById('accommodation-type').value,
         departure_time: document.getElementById('time-start').value,
@@ -608,9 +682,11 @@ function doReset() {
 function handleSave() { showPopup('popup-login'); }
 
 function handleFeedback() {
-    const val = document.getElementById('feedback-input').value.trim();
+    let val = document.getElementById('feedback-input').value.trim();
     if (!val) { showToast('Vui lòng nhập phản hồi', 'error'); return; }
     if (val.length > 500) { showToast('Phản hồi tối đa 500 ký tự', 'error'); return; }
+    // Sanitize feedback
+    val = sanitizeText(val);
     const btn = document.querySelector('.btn-feedback');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang cập nhật...'; }
     fetch('/api/feedback', {
@@ -653,7 +729,7 @@ function showToast(msg, type) {
 }
 
 // ============================================================
-//  LEAFLET MAP
+//  LEAFLET MAP (preview + modal)
 // ============================================================
 function initLeafletMap() {
     const container = document.getElementById('leaflet-map');
@@ -724,6 +800,79 @@ function initLeafletMap() {
 
     leafletMapInstance.fitBounds(latlngs, { padding: [24, 24] });
     setTimeout(() => leafletMapInstance.invalidateSize(), 250);
+
+    // Gắn sự kiện click vào map để mở modal lớn
+    const mapContainer = document.getElementById('leaflet-map');
+    if (mapContainer) {
+        mapContainer.style.cursor = 'pointer';
+        mapContainer.addEventListener('click', function () {
+            openFullMapModal(stops, latlngs);
+        });
+    }
+}
+
+// Mở modal map lớn
+function openFullMapModal(stops, latlngs) {
+    const modalContainer = document.getElementById('leaflet-modal-map');
+    if (!modalContainer) return;
+
+    // Khởi tạo map trong modal nếu chưa có
+    if (leafletModalMapInstance) {
+        leafletModalMapInstance.remove();
+        leafletModalMapInstance = null;
+    }
+
+    leafletModalMapInstance = L.map('leaflet-modal-map', {
+        zoomControl: true,
+        scrollWheelZoom: true,
+    }).setView([16.0, 108.1], 10);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 18,
+    }).addTo(leafletModalMapInstance);
+
+    L.polyline(latlngs, {
+        color: '#00A9FF',
+        weight: 5,
+        opacity: 0.9,
+        dashArray: '10, 7',
+        lineJoin: 'round',
+    }).addTo(leafletModalMapInstance);
+
+    stops.forEach(s => {
+        const icon = L.divIcon({
+            className: '',
+            html: `
+        <div style="display:flex;flex-direction:column;align-items:center;">
+          <div style="
+            background:${s.color};color:#fff;
+            border-radius:50%;width:42px;height:42px;
+            display:flex;align-items:center;justify-content:center;
+            font-size:22px;
+            box-shadow:0 3px 12px rgba(0,0,0,0.3);
+            border:2.5px solid #fff;
+          ">${s.emoji}</div>
+          <div style="
+            background:${s.color};color:#fff;
+            font-size:10px;font-weight:700;padding:2px 8px;
+            border-radius:8px;margin-top:3px;white-space:nowrap;
+            box-shadow:0 2px 6px rgba(0,0,0,0.2);
+          ">Ngày ${s.day}</div>
+        </div>`,
+            iconSize: [42, 62],
+            iconAnchor: [21, 62],
+            popupAnchor: [0, -64],
+        });
+        L.marker([s.lat, s.lng], { icon })
+            .addTo(leafletModalMapInstance)
+            .bindPopup(`<strong>${s.name}</strong><br><small>Ngày ${s.day} trong lịch trình</small>`);
+    });
+
+    leafletModalMapInstance.fitBounds(latlngs, { padding: [30, 30] });
+    setTimeout(() => leafletModalMapInstance.invalidateSize(), 200);
+
+    showPopup('popup-map');
 }
 
 loadData();

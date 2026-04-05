@@ -25,9 +25,10 @@
                 </div>
             </div>
 
-            <!-- Quick-reply suggestion chips (bỏ icon) -->
+            <!-- Quick-reply suggestion chips (đã xóa icon) -->
             <div class="chat-suggestions">
-                <button class="chat-chip" onclick="sendSuggestion('Gợi ý địa điểm Đà Lạt')">Địa điểm Đà Lạt</button>
+                <button class="chat-chip" onclick="sendSuggestion('Gợi ý địa điểm Đà Lạt')">Gợi ý địa điểm Đà
+                    Lạt</button>
                 <button class="chat-chip" onclick="sendSuggestion('Đặc sản Hội An có gì ngon?')">Đặc sản Hội An</button>
                 <button class="chat-chip" onclick="sendSuggestion('Ngân sách đi Đà Nẵng 3 ngày hết bao nhiêu?')">Ngân
                     sách Đà Nẵng</button>
@@ -35,10 +36,12 @@
                     Quốc</button>
                 <button class="chat-chip" onclick="sendSuggestion('Kinh nghiệm đi Hạ Long')">Kinh nghiệm Hạ
                     Long</button>
+                <button class="chat-chip" onclick="sendSuggestion('Top trải nghiệm Đà Nẵng')">Top trải nghiệm Đà
+                    Nẵng</button>
             </div>
         </div>
 
-        <!-- Input area (bỏ chữ Enter để gửi) -->
+        <!-- Input area -->
         <div class="chatbot-input-area-full-width">
             <input type="text" id="chatbot-input" placeholder="Nhập câu hỏi của bạn..."
                 class="chatbot-input-full-width">
@@ -55,6 +58,7 @@
     /* ============================================================
        TopChat — chatbot interactions (mock AI responses)
        Modified: NO auto-scroll to bottom. Only scroll to user message on send.
+       Removed itinerary response, replaced with "Top trải nghiệm Đà Nẵng" card.
     ============================================================ */
     const chatInput = document.getElementById('chatbot-input');
     const chatSend = document.getElementById('chatbot-send');
@@ -131,7 +135,7 @@
         if (t) t.remove();
     }
 
-    // ---- Response data (unchanged) ----
+    // ---- Response data ----
     const RESPONSES = {
         dalat: {
             type: 'card',
@@ -160,6 +164,22 @@
                 ]
             },
             follow: '✈️ Bay từ Hà Nội hoặc Sài Gòn ~1 tiếng. Mùa đẹp: <strong>tháng 3–8</strong> (ít mưa, nắng đẹp).'
+        },
+        // NEW: Top experiences in Da Nang (short, not an itinerary)
+        danang_experiences: {
+            type: 'card',
+            trigger: text => text.includes('top trải nghiệm đà nẵng') || text.includes('trải nghiệm đà nẵng') || text.includes('kinh nghiệm đà nẵng'),
+            card: {
+                title: '✨ Top trải nghiệm thú vị ở Đà Nẵng',
+                items: [
+                    { name: '🐉 Ngắm Cầu Rồng phun lửa', desc: 'Tối thứ 7 & CN lúc 21h, cầu rồng phun lửa và nước hoành tráng.', details: 'Đi bộ trên cầu hoặc đứng dọc sông Hàn để có view đẹp nhất.', rating: '4.9' },
+                    { name: '🌉 Chụp ảnh Cầu Vàng (Bà Nà)', desc: 'Cây cầu độc đáo nâng đỡ bởi đôi bàn tay khổng lồ.', details: 'Đi cáp treo lên Bà Nà, vé ~900K. Nên đi sáng sớm để tránh đông.', rating: '4.8' },
+                    { name: '🍜 Thưởng thức Mỳ Quảng & Bún chả cá', desc: 'Ẩm thực đường phố Đà Nẵng cực kỳ hấp dẫn.', details: 'Quán nổi tiếng: Mỳ Quảng Bà Cụ, Bún chả cá Bà Hớn.', rating: '4.7' },
+                    { name: '🏖️ Tắm biển Mỹ Khê', desc: 'Một trong những bãi biển đẹp nhất hành tinh.', details: 'Nước trong xanh, cát trắng. Buổi sáng hoặc chiều mát là lý tưởng.', rating: '4.8' },
+                    { name: '🛵 Leo núi Sơn Trà', desc: 'Rừng nguyên sinh với voọc chà vá chân nâu.', details: 'Thuê xe máy chạy lên bán đảo, ghé chùa Linh Ứng ngắm tượng Quan Âm.', rating: '4.6' },
+                ]
+            },
+            follow: '💡 Gợi ý: Bạn có thể kết hợp các trải nghiệm này trong 2-3 ngày. Cần thêm chi tiết về lịch trình? Hãy thử hỏi "lịch trình Đà Nẵng" nhé!'
         },
         food: {
             type: 'food',
@@ -208,7 +228,7 @@
         addMessage(
             `🤔 TopGo đang học thêm để trả lời câu hỏi này. <br>` +
             `Bạn thử hỏi về: <strong>Đà Lạt, Đà Nẵng, Hội An, Hạ Long</strong> — ` +
-            `hoặc hỏi về <strong>đặc sản, ngân sách, thời tiết</strong> nhé!`, false
+            `hoặc hỏi về <strong>đặc sản, ngân sách, thời tiết, top trải nghiệm Đà Nẵng</strong> nhé!`, false
         );
     }
 
@@ -259,7 +279,7 @@
         <table class="budget-table">
           <thead><tr><th>Hạng mục</th><th>Tiết kiệm</th><th>Thoải mái</th></tr></thead>
           <tbody>
-            ${bdata.rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}
+            ${bdata.rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td>`).join('')}
             <tr><td>💼 Tổng</td><td>${bdata.total[0]}</td><td>${bdata.total[1]}</td></tr>
           </tbody>
         </table>
