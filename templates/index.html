@@ -273,14 +273,14 @@
 </div>
 
 <!-- ============================================================
-     SCREEN 3: RESULT (ĐÃ THAY NỘI DUNG LỊCH TRÌNH BẰNG GỢI Ý DU LỊCH ĐÀ NẴNG)
+     SCREEN 3: RESULT
 ============================================================ -->
 <div class="screen" id="screen-result">
     <div class="result-wrap">
         <!-- Header summary -->
         <div class="result-header glass-card">
             <div style="flex:1;min-width:200px">
-                <div class="result-title">✨ Khám phá Đà Nẵng – Điểm đến không thể bỏ lỡ</div>
+                <div class="result-title">Hành trình Đà Nẵng · Hội An · Bà Nà Hills</div>
                 <div class="result-meta">
                     <span class="m-item">📅 <strong>25/06 – 28/06/2025</strong></span>
                     <span class="m-item">👤 <strong>4 người</strong></span>
@@ -295,12 +295,13 @@
             </div>
         </div>
 
-        <!-- Map + Content grid -->
+        <!-- Map + Itinerary grid -->
         <div class="result-grid">
             <!-- Left: interactive Leaflet map (clickable to open modal) -->
             <div>
                 <div class="map-panel glass-card" id="map-preview-card">
                     <div class="map-hd">Sơ đồ hành trình (click để phóng to)</div>
+                    <!-- Real Leaflet map replaces the old static simulation -->
                     <div id="leaflet-map" style="cursor: pointer;"></div>
                     <div class="map-stats">
                         <div class="map-stat">
@@ -323,139 +324,219 @@
                 </div>
             </div>
 
-            <!-- Right: Nội dung gợi ý về Đà Nẵng (thay thế lịch trình) -->
+            <!-- Right: day-by-day itinerary (hotels removed from here) -->
             <div class="itinerary">
-                <!-- Top attractions -->
+                <!-- Day 1 -->
                 <div class="day-block glass-card">
                     <div class="day-hd">
-                        <div class="day-badge">🏆 TOP ĐIỂM ĐẾN</div>
-                        <div class="day-title">Những địa danh nổi bật tại Đà Nẵng</div>
-                    </div>
-                    <div class="stop-card">
-                        <div class="stop-tl">
-                            <div class="stop-dot">🌉</div>
-                        </div>
-                        <div class="stop-ct">
-                            <div class="stop-nm">Cầu Rồng</div>
-                            <div class="stop-desc">Biểu tượng của Đà Nẵng, phun lửa và nước vào tối thứ 7, CN lúc 21h.
-                                Đi bộ dọc cầu ngắm sông Hàn thơ mộng.</div>
+                        <div class="day-badge">NGÀY 1</div>
+                        <div class="day-title">Thứ Tư · 25/06/2025 — Đà Nẵng</div>
+                        <div class="day-stats">
+                            <span class="day-st">4 điểm</span>
+                            <span class="day-st">~9 tiếng</span>
+                            <span class="day-st">~1.8M ₫</span>
                         </div>
                     </div>
                     <div class="stop-card">
                         <div class="stop-tl">
-                            <div class="stop-dot">🏖️</div>
+                            <div class="stop-ts">07:00</div>
+                            <div class="stop-dot">✈</div>
+                            <div class="stop-te">08:30</div>
+                            <div class="stop-ln"></div>
                         </div>
                         <div class="stop-ct">
-                            <div class="stop-nm">Bãi biển Mỹ Khê</div>
-                            <div class="stop-desc">Top 6 bãi biển đẹp nhất hành tinh do Forbes bình chọn. Cát trắng mịn,
-                                nước trong xanh, nhiều resort cao cấp.</div>
-                        </div>
-                    </div>
-                    <div class="stop-card">
-                        <div class="stop-tl">
-                            <div class="stop-dot">🏔️</div>
-                        </div>
-                        <div class="stop-ct">
-                            <div class="stop-nm">Bán đảo Sơn Trà</div>
-                            <div class="stop-desc">Rừng nguyên sinh với voọc chà vá chân nâu quý hiếm. Check-in tượng Bồ
-                                Tát Quan Âm, ngắm toàn cảnh thành phố.</div>
-                        </div>
-                    </div>
-                    <div class="stop-card">
-                        <div class="stop-tl">
-                            <div class="stop-dot">🏛️</div>
-                        </div>
-                        <div class="stop-ct">
-                            <div class="stop-nm">Bảo tàng Điêu khắc Chăm</div>
-                            <div class="stop-desc">Lưu giữ bộ sưu tập hiện vật Champa lớn nhất thế giới, kiến trúc độc
-                                đáo.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Must-eat foods -->
-                <div class="day-block glass-card">
-                    <div class="day-hd">
-                        <div class="day-badge">🍜 ẨM THỰC</div>
-                        <div class="day-title">Đặc sản nhất định phải thử</div>
-                    </div>
-                    <div class="stop-card">
-                        <div class="stop-tl">
-                            <div class="stop-dot">🍜</div>
-                        </div>
-                        <div class="stop-ct">
-                            <div class="stop-nm">Mỳ Quảng</div>
-                            <div class="stop-desc">Sợi mì vàng nghệ, nước dùng đậm đà, ăn kèm tôm, thịt, bánh đa nướng
-                                giòn. Gợi ý: Mỳ Quảng Bà Cụ, Mỳ Quảng Ếch.</div>
-                        </div>
-                    </div>
-                    <div class="stop-card">
-                        <div class="stop-tl">
-                            <div class="stop-dot">🍢</div>
-                        </div>
-                        <div class="stop-ct">
-                            <div class="stop-nm">Bún chả cá</div>
-                            <div class="stop-desc">Chả cá thu chiên vàng, nước dùng ngọt thanh, ăn kèm rau sống. Quán
-                                nổi tiếng: Bún chả cá Bà Hớn, Bà Thu.</div>
-                        </div>
-                    </div>
-                    <div class="stop-card">
-                        <div class="stop-tl">
-                            <div class="stop-dot">🦞</div>
-                        </div>
-                        <div class="stop-ct">
-                            <div class="stop-nm">Hải sản tươi sống</div>
-                            <div class="stop-desc">Tôm hùm, cua, hàu nướng mỡ hành, ốc len xào dừa… Khu vực bãi biển Mỹ
-                                Khê và vịnh Đà Nẵng có nhiều nhà hàng ngon giá hợp lý.</div>
-                        </div>
-                    </div>
-                    <div class="stop-card">
-                        <div class="stop-tl">
-                            <div class="stop-dot">🥞</div>
-                        </div>
-                        <div class="stop-ct">
-                            <div class="stop-nm">Bánh xèo, bánh tráng cuốn thịt heo</div>
-                            <div class="stop-desc">Bánh xèo giòn nhân tôm thịt, chấm nước mắm chua ngọt. Địa chỉ: Bánh
-                                xèo Bà Dưỡng, Bánh xèo Bà Tuyết.</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Travel tips -->
-                <div class="day-block glass-card">
-                    <div class="day-hd">
-                        <div class="day-badge">💡 MẸO DU LỊCH</div>
-                        <div class="day-title">Kinh nghiệm &amp; lưu ý</div>
-                    </div>
-                    <div class="stop-card">
-                        <div class="stop-ct">
-                            <div class="stop-desc"><strong>✈️ Di chuyển:</strong> Sân bay Đà Nẵng (DAD) có đường bay
-                                thẳng từ Hà Nội, TP.HCM, các thành phố lớn. Thuê xe máy (120-150k/ngày) hoặc taxi công
-                                nghệ rất tiện.</div>
-                        </div>
-                    </div>
-                    <div class="stop-card">
-                        <div class="stop-ct">
-                            <div class="stop-desc"><strong>🏨 Lưu trú:</strong> Khu vực biển Mỹ Khê tập trung nhiều
-                                resort, khách sạn 3-5 sao. Homestay giá rẻ hơn ở trung tâm hoặc quận Hải Châu.</div>
-                        </div>
-                    </div>
-                    <div class="stop-card">
-                        <div class="stop-ct">
-                            <div class="stop-desc"><strong>🌤️ Thời tiết:</strong> Đẹp nhất từ tháng 3 đến tháng 8 (nắng
-                                ít mưa). Tháng 9-11 mưa nhiều, có thể bão lũ. Nhớ mang kem chống nắng, mũ, áo khoác nhẹ.
+                            <div class="stop-top">
+                                <div class="stop-img">✈</div>
+                                <div>
+                                    <div class="stop-nm"><a href="#" target="_blank">Sân bay Đà Nẵng (DAD)</a><span
+                                            class="stop-rt">⭐ 4.2</span></div>
+                                    <div class="stop-desc">Bay từ Hà Nội, chuyến sớm để tận dụng ngày đầu. Nhận phòng
+                                        khách sạn.</div>
+                                    <div class="stop-dur">⏱ Di chuyển: 30 phút (taxi) · Khoảng cách: 5 km</div>
+                                    <div class="transport-simple">🚕 Di chuyển bằng taxi, ~30 phút, dự kiến đến lúc
+                                        08:30</div>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="stop-card">
+                        <div class="stop-tl">
+                            <div class="stop-ts">09:00</div>
+                            <div class="stop-dot">🏖</div>
+                            <div class="stop-te">12:00</div>
+                            <div class="stop-ln"></div>
+                        </div>
                         <div class="stop-ct">
-                            <div class="stop-desc"><strong>📸 Check-in đẹp:</strong> Cầu Vàng (Bà Nà Hills), Cầu Rồng,
-                                Công viên Châu Á, đường ven biển Võ Nguyên Giáp, Bãi Đá Sơn Trà.</div>
+                            <div class="stop-top">
+                                <div class="stop-img">🏖</div>
+                                <div>
+                                    <div class="stop-nm"><a href="#" target="_blank">Bãi biển Mỹ Khê</a><span
+                                            class="stop-rt">⭐ 4.8</span></div>
+                                    <div class="stop-desc">Một trong những bãi biển đẹp nhất châu Á. Nước trong xanh,
+                                        cát trắng mịn.</div>
+                                    <div class="stop-dur">⏱ Tham quan ~3 tiếng · Khoảng cách từ trung tâm: 3 km</div>
+                                    <div class="transport-simple">🚕 Di chuyển bằng taxi, ~10 phút, dự kiến đến lúc
+                                        09:10</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                    <div class="stop-card">
+                        <div class="stop-tl">
+                            <div class="stop-ts">12:30</div>
+                            <div class="stop-dot">🍜</div>
+                            <div class="stop-te">14:00</div>
+                            <div class="stop-ln"></div>
+                        </div>
+                        <div class="stop-ct">
+                            <div class="stop-top">
+                                <div class="stop-img">🍜</div>
+                                <div>
+                                    <div class="stop-nm"><a href="#" target="_blank">Quán Mỳ Quảng Bà Cụ</a><span
+                                            class="stop-rt">⭐ 4.6</span></div>
+                                    <div class="stop-desc">Quán mỳ quảng lâu đời, đông khách địa phương, giá bình dân.
+                                    </div>
+                                    <div class="stop-dur">⏱ ~1.5 tiếng · ~80.000 ₫/người</div>
+                                    <div class="transport-simple">🚶 Di chuyển bộ, ~5 phút, dự kiến đến lúc 12:35</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stop-card">
+                        <div class="stop-tl">
+                            <div class="stop-ts">15:00</div>
+                            <div class="stop-dot">🏛</div>
+                            <div class="stop-te">17:00</div>
+                        </div>
+                        <div class="stop-ct">
+                            <div class="stop-top">
+                                <div class="stop-img">🏛</div>
+                                <div>
+                                    <div class="stop-nm"><a href="#" target="_blank">Bảo tàng Điêu khắc Chăm</a><span
+                                            class="stop-rt">⭐ 4.5</span></div>
+                                    <div class="stop-desc">Bảo tàng lưu giữ bộ sưu tập hiện vật Chăm lớn nhất thế giới.
+                                    </div>
+                                    <div class="stop-dur">⏱ Tham quan ~2 tiếng · Khoảng cách từ trung tâm: 1.5 km</div>
+                                    <div class="transport-simple">🚕 Di chuyển bằng taxi, ~10 phút, dự kiến đến lúc
+                                        15:10</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /day-1 -->
 
-                <!-- ========== HOTEL COMPARISON SECTION (giữ nguyên) ========== -->
+                <!-- Day 2 -->
+                <div class="day-block glass-card">
+                    <div class="day-hd">
+                        <div class="day-badge">NGÀY 2</div>
+                        <div class="day-title">Thứ Năm · 26/06/2025 — Bà Nà Hills</div>
+                        <div class="day-stats">
+                            <span class="day-st">2 điểm</span>
+                            <span class="day-st">~10 tiếng</span>
+                            <span class="day-st">~3.2M ₫</span>
+                        </div>
+                    </div>
+                    <div class="stop-card">
+                        <div class="stop-tl">
+                            <div class="stop-ts">07:30</div>
+                            <div class="stop-dot">🌉</div>
+                            <div class="stop-te">17:00</div>
+                        </div>
+                        <div class="stop-ct">
+                            <div class="stop-top">
+                                <div class="stop-img">🌉</div>
+                                <div>
+                                    <div class="stop-nm"><a href="#" target="_blank">Bà Nà Hills · Cầu Vàng</a><span
+                                            class="stop-rt">⭐ 4.7</span></div>
+                                    <div class="stop-desc">Khu du lịch trên đỉnh núi nổi tiếng với Cầu Vàng biểu tượng.
+                                    </div>
+                                    <div class="stop-dur">⏱ Cả ngày ~9 tiếng · Vé ~750.000 ₫/người</div>
+                                    <div class="transport-simple">🚌 Di chuyển bằng xe đưa đón, ~45 phút, dự kiến đến
+                                        lúc 08:15</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /day-2 -->
+
+                <!-- Day 3 -->
+                <div class="day-block glass-card">
+                    <div class="day-hd">
+                        <div class="day-badge">NGÀY 3</div>
+                        <div class="day-title">Thứ Sáu · 27/06/2025 — Hội An</div>
+                        <div class="day-stats">
+                            <span class="day-st">3 điểm</span>
+                            <span class="day-st">~8 tiếng</span>
+                            <span class="day-st">~1.5M ₫</span>
+                        </div>
+                    </div>
+                    <div class="stop-card">
+                        <div class="stop-tl">
+                            <div class="stop-ts">08:00</div>
+                            <div class="stop-dot">🏮</div>
+                            <div class="stop-te">10:30</div>
+                            <div class="stop-ln"></div>
+                        </div>
+                        <div class="stop-ct">
+                            <div class="stop-top">
+                                <div class="stop-img">🏮</div>
+                                <div>
+                                    <div class="stop-nm"><a href="#" target="_blank">Phố Cổ Hội An</a><span
+                                            class="stop-rt">⭐ 4.9</span></div>
+                                    <div class="stop-desc">Di sản văn hóa thế giới, kiến trúc cổ kính, không gian yên
+                                        bình.</div>
+                                    <div class="stop-dur">⏱ Tham quan ~2.5 tiếng · Khoảng cách từ trung tâm: 25 km</div>
+                                    <div class="transport-simple">🚗 Di chuyển bằng ô tô riêng, ~45 phút, dự kiến đến
+                                        lúc 08:45</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stop-card">
+                        <div class="stop-tl">
+                            <div class="stop-ts">11:00</div>
+                            <div class="stop-dot">🍲</div>
+                            <div class="stop-te">12:30</div>
+                            <div class="stop-ln"></div>
+                        </div>
+                        <div class="stop-ct">
+                            <div class="stop-top">
+                                <div class="stop-img">🍲</div>
+                                <div>
+                                    <div class="stop-nm"><a href="#" target="_blank">Cao Lầu Thanh</a><span
+                                            class="stop-rt">⭐ 4.5</span></div>
+                                    <div class="stop-desc">Thưởng thức món cao lầu đặc sản Hội An.</div>
+                                    <div class="stop-dur">⏱ ~1.5 tiếng · ~50.000 ₫/người</div>
+                                    <div class="transport-simple">🚶 Di chuyển bộ, ~10 phút, dự kiến đến lúc 11:10</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stop-card">
+                        <div class="stop-tl">
+                            <div class="stop-ts">14:00</div>
+                            <div class="stop-dot">🏖</div>
+                            <div class="stop-te">16:30</div>
+                        </div>
+                        <div class="stop-ct">
+                            <div class="stop-top">
+                                <div class="stop-img">🏖</div>
+                                <div>
+                                    <div class="stop-nm"><a href="#" target="_blank">Biển Cửa Đại</a><span
+                                            class="stop-rt">⭐ 4.3</span></div>
+                                    <div class="stop-desc">Bãi biển đẹp, nước ấm, thích hợp tắm biển.</div>
+                                    <div class="stop-dur">⏱ Tham quan ~2.5 tiếng · Khoảng cách từ phố cổ: 5 km</div>
+                                    <div class="transport-simple">🛵 Di chuyển bằng xe máy, ~15 phút, dự kiến đến lúc
+                                        14:15</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- /day-3 -->
+
+                <!-- ====================================================
+                     HOTEL COMPARISON SECTION (standalone, not per-day)
+                ==================================================== -->
                 <div class="hotels-section">
                     <div class="hotels-sec-hd">
                         <div class="hotels-sec-title">Top 3 Chỗ ở Phù Hợp Nhất</div>
